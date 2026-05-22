@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-manga-purple/30 border-t-manga-purple rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-wabi-red/20 border-t-wabi-red rounded-full animate-spin" />
       </div>
     )
   }
@@ -29,7 +29,7 @@ const AuthRoute = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-manga-purple/30 border-t-manga-purple rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-wabi-red/20 border-t-wabi-red rounded-full animate-spin" />
       </div>
     )
   }
@@ -50,7 +50,7 @@ const AppRoutes = () => (
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-96 gap-4">
             <div className="text-6xl">🗺️</div>
-            <h2 className="text-2xl font-bold text-manga-text">Trang không tồn tại</h2>
+            <h2 className="text-2xl font-bold text-wabi-text font-serif">Trang không tồn tại</h2>
             <a href="/" className="btn-primary">Về Trang Chủ</a>
           </div>
         } />
@@ -70,15 +70,15 @@ function App() {
           toastOptions={{
             duration: 3000,
             style: {
-              background: 'rgba(21, 2, 40, 0.95)',
-              color: '#f0e6ff',
-              border: '1px solid rgba(155, 45, 255, 0.3)',
-              backdropFilter: 'blur(16px)',
-              fontFamily: 'Nunito, sans-serif',
+              background: '#faf8f5',
+              color: '#3d2b1a',
+              border: '1px solid #d9cbb8',
+              boxShadow: '0 4px 20px rgba(61, 43, 26, 0.12)',
+              fontFamily: "'Be Vietnam Pro', sans-serif",
               fontWeight: '600',
             },
-            success: { iconTheme: { primary: '#9b2dff', secondary: '#fff' } },
-            error: { iconTheme: { primary: '#ff2d78', secondary: '#fff' } },
+            success: { iconTheme: { primary: '#5a7247', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#b5503a', secondary: '#fff' } },
           }}
         />
       </AuthProvider>
