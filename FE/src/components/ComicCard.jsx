@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Star, Package } from 'lucide-react'
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
@@ -53,7 +52,9 @@ const ComicCard = ({ comic }) => {
 
           {comic.rating?.avg > 0 && (
             <div className="flex items-center gap-1">
-              <Star size={11} fill="#b89b5e" className="text-wabi-gold" />
+              <svg className="w-[11px] h-[11px] text-wabi-gold fill-wabi-gold inline-block" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
               <span className="text-xs text-wabi-muted">{comic.rating.avg.toFixed(1)}</span>
             </div>
           )}
@@ -72,7 +73,11 @@ const ComicCard = ({ comic }) => {
             </div>
             {comic.sold > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
-                <Package size={10} className="text-wabi-muted" />
+                <svg className="w-[10px] h-[10px] text-wabi-muted inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
                 <span className="text-wabi-muted text-xs">Đã bán: {comic.sold.toLocaleString()}</span>
               </div>
             )}

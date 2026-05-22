@@ -33,6 +33,11 @@
   padding: 0;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Be Vietnam Pro', sans-serif;
   background-color: var(--bg-primary);
@@ -132,8 +137,8 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-red), var(--accent-red-light));
   color: white;
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
+  padding: 0.75rem 1.8rem;
+  border-radius: 10px;
   font-weight: 700;
   font-family: 'Be Vietnam Pro', sans-serif;
   transition: all 0.3s ease;
@@ -151,8 +156,8 @@ body {
 .btn-green {
   background: linear-gradient(135deg, var(--accent-green), var(--accent-green-light));
   color: white;
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
+  padding: 0.75rem 1.8rem;
+  border-radius: 10px;
   font-weight: 700;
   font-family: 'Be Vietnam Pro', sans-serif;
   transition: all 0.3s ease;
@@ -170,8 +175,8 @@ body {
 .btn-outline {
   background: transparent;
   color: var(--accent-red);
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
+  padding: 0.75rem 1.8rem;
+  border-radius: 10px;
   font-weight: 700;
   border: 2px solid var(--accent-red);
   cursor: pointer;
@@ -190,8 +195,8 @@ body {
 .btn-outline-green {
   background: transparent;
   color: var(--accent-green);
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
+  padding: 0.75rem 1.8rem;
+  border-radius: 10px;
   font-weight: 700;
   border: 2px solid var(--accent-green);
   cursor: pointer;

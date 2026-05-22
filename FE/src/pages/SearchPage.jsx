@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { comicsAPI, categoriesAPI } from '../api'
 import ComicCard from '../components/ComicCard'
-import { Search, Filter, X, SlidersHorizontal, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
+import { IconFolder, IconBook, IconFilter, IconX } from '../components/Icons'
 
 const SORT_OPTIONS = [
   { value: '', label: 'Mặc định' },
@@ -93,40 +93,39 @@ const SearchPage = () => {
   const hasActiveFilters = filters.keyword || filters.category || filters.minPrice || filters.maxPrice || filters.tags || filters.status || filters.sort
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="section-title text-2xl mb-2 font-serif">Tìm Kiếm & Khám Phá</h1>
         {pagination.total > 0 && (
-          <p className="text-wabi-muted text-sm mt-2">Tìm thấy <span className="text-wabi-red font-bold">{pagination.total}</span> kết quả</p>
+          <p className="text-wabi-muted text-sm mt-2">Tìm thấy <span className="text-[#b5503a] font-bold">{pagination.total}</span> kết quả</p>
         )}
       </div>
 
       {/* Search bar */}
       <form onSubmit={handleSearch} className="flex gap-3 mb-6" id="search-form">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-wabi-muted" />
           <input
             type="text"
             value={keywordInput}
             onChange={(e) => setKeywordInput(e.target.value)}
             placeholder="Tìm tên truyện, tác giả..."
-            className="input-wabi pl-12"
+            className="input-wabi pl-4"
             id="search-keyword-input"
           />
         </div>
-        <button type="submit" className="btn-primary px-6" id="search-submit-btn">
-          <Search size={16} /> Tìm
+        <button type="submit" className="bg-[#b5503a] text-white text-sm font-bold px-6 py-2.5 rounded-[10px] border border-[#b5503a] hover:bg-[#a0402b] hover:border-[#a0402b] transition-all duration-300 cursor-pointer shadow-warm" id="search-submit-btn">
+          Tìm
         </button>
         <button
           type="button"
           onClick={() => setShowFilter(!showFilter)}
-          className={`btn-outline px-4 relative ${hasActiveFilters ? 'border-wabi-red text-wabi-red' : ''}`}
+          className={`border-2 px-6 py-2.5 rounded-[10px] text-sm font-bold transition-all duration-300 relative cursor-pointer ${hasActiveFilters ? 'border-[#b5503a] text-[#b5503a]' : 'border-[#d9cbb8] text-[#6b5744]'}`}
           id="search-filter-toggle-btn"
         >
-          <SlidersHorizontal size={16} />
+          {showFilter ? 'Đóng bộ lọc' : 'Bộ lọc'}
           {hasActiveFilters && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-wabi-red" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#b5503a]" />
           )}
         </button>
       </form>
@@ -136,36 +135,36 @@ const SearchPage = () => {
         <div className="flex gap-2 flex-wrap mb-4 items-center">
           <span className="text-wabi-muted text-xs">Đang lọc:</span>
           {filters.keyword && (
-            <span className="badge badge-new flex items-center gap-1">
+            <span className="badge badge-new flex items-center gap-1.5">
               "{filters.keyword}"
-              <button onClick={() => { updateFilter('keyword', ''); setKeywordInput('') }} className="hover:text-wabi-red"><X size={11} /></button>
+              <button onClick={() => { updateFilter('keyword', ''); setKeywordInput('') }} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           )}
           {filters.sort && (
-            <span className="badge badge-sale flex items-center gap-1">
+            <span className="badge badge-sale flex items-center gap-1.5">
               {SORT_OPTIONS.find(s => s.value === filters.sort)?.label}
-              <button onClick={() => updateFilter('sort', '')} className="hover:text-wabi-red"><X size={11} /></button>
+              <button onClick={() => updateFilter('sort', '')} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           )}
           {activeTagList.map(tag => (
-            <span key={tag} className="badge badge-hot flex items-center gap-1">
+            <span key={tag} className="badge badge-hot flex items-center gap-1.5">
               #{tag}
-              <button onClick={() => toggleTag(tag)} className="hover:text-wabi-red"><X size={11} /></button>
+              <button onClick={() => toggleTag(tag)} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           ))}
-          <button onClick={clearAllFilters} className="text-wabi-muted text-xs hover:text-wabi-red flex items-center gap-1 ml-2" id="clear-all-filters-btn">
-            <X size={12} /> Xóa tất cả
+          <button onClick={clearAllFilters} className="text-wabi-muted text-xs hover:text-[#b5503a] flex items-center gap-1 ml-2 cursor-pointer font-bold" id="clear-all-filters-btn">
+            <IconX className="w-2.5 h-2.5" /> Xóa tất cả
           </button>
         </div>
       )}
 
-      <div className="flex gap-8">
+      <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         {showFilter && (
-          <aside className="w-64 flex-shrink-0 animate-fade-up" id="filter-sidebar">
+          <aside className="w-full md:w-64 flex-shrink-0 animate-fade-up" id="filter-sidebar">
             <div className="paper-old rounded-2xl p-5 sticky top-20 space-y-6">
               <h3 className="font-bold text-wabi-text font-serif flex items-center gap-2">
-                <Filter size={16} className="text-wabi-red" /> Bộ Lọc
+                <IconFilter className="w-4 h-4 text-[#b5503a]" /> Bộ Lọc
               </h3>
 
               {/* Sort */}
@@ -201,7 +200,7 @@ const SearchPage = () => {
                     <button
                       key={p}
                       onClick={() => updateFilter('maxPrice', String(p))}
-                      className={`text-xs px-2 py-1 rounded-lg border transition-all ${filters.maxPrice === String(p) ? 'border-wabi-red text-wabi-red bg-red-50' : 'border-wabi-border text-wabi-muted hover:border-wabi-red hover:text-wabi-red'}`}
+                      className={`text-xs px-2 py-1 rounded-lg border transition-all cursor-pointer ${filters.maxPrice === String(p) ? 'border-[#b5503a] text-[#b5503a] bg-red-50' : 'border-[#d9cbb8] text-wabi-muted hover:border-[#b5503a] hover:text-[#b5503a]'}`}
                     >
                       {'<'}{(p / 1000).toFixed(0)}k
                     </button>
@@ -217,10 +216,10 @@ const SearchPage = () => {
                     <button
                       key={tag}
                       onClick={() => toggleTag(tag)}
-                      className={`text-xs px-2.5 py-1 rounded-lg border font-semibold transition-all ${
+                      className={`text-xs px-2.5 py-1 rounded-lg border font-semibold transition-all cursor-pointer ${
                         activeTagList.includes(tag)
-                          ? 'border-wabi-red bg-red-50 text-wabi-red'
-                          : 'border-wabi-border text-wabi-muted hover:border-wabi-green hover:text-wabi-green'
+                          ? 'border-[#b5503a] bg-red-50 text-[#b5503a]'
+                          : 'border-[#d9cbb8] text-wabi-muted hover:border-[#5a7247] hover:text-[#5a7247]'
                       }`}
                       id={`tag-filter-${tag}`}
                     >
@@ -254,8 +253,8 @@ const SearchPage = () => {
               </div>
 
               {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="w-full btn-outline text-sm" id="sidebar-clear-btn">
-                  <X size={14} /> Xóa Bộ Lọc
+                <button onClick={clearAllFilters} className="w-full border-2 border-[#b5503a] text-[#b5503a] text-sm font-bold py-2 rounded-lg hover:bg-[#b5503a] hover:text-white transition-all cursor-pointer" id="sidebar-clear-btn">
+                  <IconX className="w-2.5 h-2.5 inline-block mr-1" /> Xóa Bộ Lọc
                 </button>
               )}
             </div>
@@ -265,7 +264,7 @@ const SearchPage = () => {
         {/* Results */}
         <div className="flex-1">
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {Array(12).fill(0).map((_, i) => (
                 <div key={i} className="comic-card">
                   <div className="shimmer-loading w-full aspect-[2/3]" />
@@ -278,7 +277,7 @@ const SearchPage = () => {
             </div>
           ) : comics.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                 {comics.map(comic => <ComicCard key={comic._id} comic={comic} />)}
               </div>
 
@@ -287,10 +286,10 @@ const SearchPage = () => {
                   <button
                     onClick={() => updateFilter('page', Math.max(1, filters.page - 1))}
                     disabled={filters.page <= 1}
-                    className="btn-outline p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="border-2 border-[#d9cbb8] text-[#6b5744] p-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer font-bold text-sm rounded-lg"
                     id="pagination-prev"
                   >
-                    <ChevronLeft size={16} />
+                    ←
                   </button>
 
                   {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => {
@@ -299,10 +298,10 @@ const SearchPage = () => {
                       <button
                         key={p}
                         onClick={() => updateFilter('page', p)}
-                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all cursor-pointer ${
                           filters.page === p
-                            ? 'bg-wabi-red text-white shadow-warm'
-                            : 'bg-white border border-wabi-border text-wabi-muted hover:text-wabi-text hover:border-wabi-red/30'
+                            ? 'bg-[#b5503a] text-white shadow-warm'
+                            : 'bg-white border border-[#d9cbb8] text-[#6b5744] hover:text-[#b5503a] hover:border-[#b5503a]/30'
                         }`}
                         id={`pagination-page-${p}`}
                       >
@@ -314,20 +313,20 @@ const SearchPage = () => {
                   <button
                     onClick={() => updateFilter('page', Math.min(pagination.totalPages, filters.page + 1))}
                     disabled={filters.page >= pagination.totalPages}
-                    className="btn-outline p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="border-2 border-[#d9cbb8] text-[#6b5744] p-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer font-bold text-sm rounded-lg"
                     id="pagination-next"
                   >
-                    <ChevronRight size={16} />
+                    →
                   </button>
                 </div>
               )}
             </>
           ) : (
             <div className="text-center py-20">
-              <div className="text-6xl mb-4">📖</div>
-              <h3 className="text-xl font-bold text-wabi-text font-serif mb-2">Không tìm thấy kết quả</h3>
+              <IconBook className="w-16 h-16 text-wabi-muted mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-[#3d2b1a] font-serif mb-2">Không tìm thấy kết quả</h3>
               <p className="text-wabi-muted mb-6">Thử thay đổi từ khóa hoặc điều chỉnh bộ lọc</p>
-              <button onClick={clearAllFilters} className="btn-primary" id="no-results-clear-btn">
+              <button onClick={clearAllFilters} className="bg-[#b5503a] text-white text-sm font-bold px-6 py-2.5 rounded-lg border border-[#b5503a] hover:bg-[#a0402b] hover:border-[#a0402b] transition-all duration-300 cursor-pointer" id="no-results-clear-btn">
                 Xóa Bộ Lọc
               </button>
             </div>

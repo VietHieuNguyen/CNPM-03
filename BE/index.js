@@ -37,7 +37,7 @@ app.use((req, res) => {
 
 connectDB()
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`App is listening on port: ${PORT}`)
   console.log(`Manga Store API: http://localhost:${PORT}/api/health`)
 })

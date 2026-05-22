@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage'
 import ComicDetailPage from './pages/ComicDetailPage'
 import SearchPage from './pages/SearchPage'
 import ProfilePage from './pages/ProfilePage'
+import { IconMap } from './components/Icons'
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -49,7 +50,7 @@ const AppRoutes = () => (
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-96 gap-4">
-            <div className="text-6xl">🗺️</div>
+            <IconMap className="w-16 h-16 text-[#9a8672]" />
             <h2 className="text-2xl font-bold text-wabi-text font-serif">Trang không tồn tại</h2>
             <a href="/" className="btn-primary">Về Trang Chủ</a>
           </div>

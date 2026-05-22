@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, Heart, Mail } from 'lucide-react'
+import { IconBook, IconHeart } from './Icons'
 
 const Footer = () => {
   return (
     <footer className="mt-20 border-t border-wabi-border">
       <div className="bg-wabi-bg2">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-10 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-wabi-red to-wabi-brown flex items-center justify-center">
-                  <BookOpen size={17} className="text-white" />
+                  <IconBook className="w-4 h-4 text-white" />
                 </div>
                 <span className="font-serif text-xl font-bold text-wabi-text tracking-tight">
                   Manga<span className="text-wabi-red">Store</span>
@@ -60,10 +60,10 @@ const Footer = () => {
           </div>
 
           <div className="mt-10 pt-6 border-t border-wabi-border flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-wabi-muted text-sm flex items-center gap-1">
-              Làm với <Heart size={14} className="text-wabi-red" /> cho người yêu truyện tranh
+            <p className="text-wabi-muted text-sm flex items-center gap-1.5">
+              Làm với <IconHeart className="w-3.5 h-3.5 text-wabi-red inline-block animate-soft-pulse" /> cho người yêu truyện tranh
             </p>
-            <p className="text-wabi-muted text-sm">© 2025 MangaStore. All rights reserved.</p>
+            <p className="text-wabi-muted text-sm">&copy; 2025 MangaStore. All rights reserved.</p>
           </div>
         </div>
       </div>
