@@ -11,6 +11,18 @@ exports.getCart = async (req, res) => {
 
     if (!cart) {
       cart = await Cart.create({ user: req.user._id, items: [] })
+    } else {
+      // Check and clean up any items with null/deleted comics
+      const initialLength = cart.items.length
+      cart.items = cart.items.filter(item => item.comic !== null)
+      if (cart.items.length !== initialLength) {
+        await cart.save()
+        // Re-populate after cleaning up
+        await cart.populate({
+          path: "items.comic",
+          populate: { path: "category" }
+        })
+      }
     }
 
     res.status(200).json({

@@ -27,10 +27,24 @@ exports.createOrder = async (req, res) => {
     }
 
     const cart = await Cart.findOne({ user: req.user._id }).populate("items.comic")
-    if (!cart || cart.items.length === 0) {
+    if (!cart) {
       return res.status(400).json({
         success: false,
         message: "Giỏ hàng của bạn đang trống.",
+      })
+    }
+
+    // Clean up null/deleted comics on the fly
+    const initialLength = cart.items.length
+    cart.items = cart.items.filter(item => item.comic !== null)
+    if (cart.items.length !== initialLength) {
+      await cart.save()
+    }
+
+    if (cart.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Giỏ hàng của bạn đang trống sau khi gỡ bỏ các sản phẩm không còn tồn tại.",
       })
     }
 
@@ -39,12 +53,6 @@ exports.createOrder = async (req, res) => {
     let totalAmount = 0
 
     for (const item of cart.items) {
-      if (!item.comic) {
-        return res.status(400).json({
-          success: false,
-          message: "Một sản phẩm trong giỏ hàng không còn tồn tại.",
-        })
-      }
       if (item.comic.stock < item.quantity) {
         return res.status(400).json({
           success: false,
@@ -69,7 +77,7 @@ exports.createOrder = async (req, res) => {
       totalAmount,
       status: "pending",
       paymentMethod,
-      paymentStatus: paymentMethod === "ONLINE" ? "paid" : "pending", // Assume simulated online payments are paid
+      paymentStatus: "pending", // Payment is verified via SePay webhook or cashier
       shippingAddress,
       note,
     })
