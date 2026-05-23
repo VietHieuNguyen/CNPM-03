@@ -44,3 +44,4 @@ export const IconX = ({ className = 'w-3 h-3' }) => (
 
 export const IconCart = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6']} />
 export const IconHistory = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M12 8v4l3 3m6-3a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.7L21 8M21 3v5h-5']} />
+export const IconTrash = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M3 6h18', 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2']} />

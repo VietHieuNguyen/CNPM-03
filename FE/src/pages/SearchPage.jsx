@@ -127,7 +127,7 @@ const SearchPage = () => {
       <div className="mb-8">
         <h1 className="section-title text-2xl mb-2 font-serif">Tìm Kiếm & Khám Phá</h1>
         {pagination.total > 0 && (
-          <p className="text-wabi-muted text-sm mt-2">Tìm thấy <span className="text-[#b5503a] font-bold">{pagination.total}</span> kết quả</p>
+          <p className="text-wabi-muted text-sm mt-2">Tìm thấy <span className="text-[#683520] font-bold">{pagination.total}</span> kết quả</p>
         )}
       </div>
 
@@ -143,18 +143,18 @@ const SearchPage = () => {
             id="search-keyword-input"
           />
         </div>
-        <button type="submit" className="bg-[#b5503a] text-white text-sm font-bold px-6 py-2.5 rounded-[10px] border border-[#b5503a] hover:bg-[#a0402b] hover:border-[#a0402b] transition-all duration-300 cursor-pointer shadow-warm" id="search-submit-btn">
+        <button type="submit" className="bg-[#683520] text-white text-sm font-bold px-6 py-2.5 rounded-[10px] border border-[#683520] hover:bg-[#522918] hover:border-[#522918] transition-all duration-300 cursor-pointer shadow-warm" id="search-submit-btn">
           Tìm
         </button>
         <button
           type="button"
           onClick={() => setShowFilter(!showFilter)}
-          className={`border-2 px-6 py-2.5 rounded-[10px] text-sm font-bold transition-all duration-300 relative cursor-pointer ${hasActiveFilters ? 'border-[#b5503a] text-[#b5503a]' : 'border-[#d9cbb8] text-[#6b5744]'}`}
+          className={`border-2 px-6 py-2.5 rounded-[10px] text-sm font-bold transition-all duration-300 relative cursor-pointer ${hasActiveFilters ? 'border-[#683520] text-[#683520]' : 'border-[#d9cbb8] text-[#6b5744]'}`}
           id="search-filter-toggle-btn"
         >
           {showFilter ? 'Đóng bộ lọc' : 'Bộ lọc'}
           {hasActiveFilters && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#b5503a]" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#683520]" />
           )}
         </button>
       </form>
@@ -166,22 +166,22 @@ const SearchPage = () => {
           {filters.keyword && (
             <span className="badge badge-new flex items-center gap-1.5">
               "{filters.keyword}"
-              <button onClick={() => { updateFilter('keyword', ''); setKeywordInput('') }} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
+              <button onClick={() => { updateFilter('keyword', ''); setKeywordInput('') }} className="hover:text-[#683520] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           )}
           {filters.sort && (
             <span className="badge badge-sale flex items-center gap-1.5">
               {SORT_OPTIONS.find(s => s.value === filters.sort)?.label}
-              <button onClick={() => updateFilter('sort', '')} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
+              <button onClick={() => updateFilter('sort', '')} className="hover:text-[#683520] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           )}
           {activeTagList.map(tag => (
             <span key={tag} className="badge badge-hot flex items-center gap-1.5">
               #{tag}
-              <button onClick={() => toggleTag(tag)} className="hover:text-[#b5503a] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
+              <button onClick={() => toggleTag(tag)} className="hover:text-[#683520] font-bold cursor-pointer"><IconX className="w-2.5 h-2.5" /></button>
             </span>
           ))}
-          <button onClick={clearAllFilters} className="text-wabi-muted text-xs hover:text-[#b5503a] flex items-center gap-1 ml-2 cursor-pointer font-bold" id="clear-all-filters-btn">
+          <button onClick={clearAllFilters} className="text-wabi-muted text-xs hover:text-[#683520] flex items-center gap-1 ml-2 cursor-pointer font-bold" id="clear-all-filters-btn">
             <IconX className="w-2.5 h-2.5" /> Xóa tất cả
           </button>
         </div>
@@ -193,7 +193,7 @@ const SearchPage = () => {
           <aside className="w-full md:w-64 flex-shrink-0 animate-fade-up" id="filter-sidebar">
             <div className="paper-old rounded-2xl p-5 sticky top-20 space-y-6">
               <h3 className="font-bold text-wabi-text font-serif flex items-center gap-2">
-                <IconFilter className="w-4 h-4 text-[#b5503a]" /> Bộ Lọc
+                <IconFilter className="w-4 h-4 text-[#683520]" /> Bộ Lọc
               </h3>
 
               {/* Sort */}
@@ -229,7 +229,7 @@ const SearchPage = () => {
                     <button
                       key={p}
                       onClick={() => updateFilter('maxPrice', String(p))}
-                      className={`text-xs px-2 py-1 rounded-lg border transition-all cursor-pointer ${filters.maxPrice === String(p) ? 'border-[#b5503a] text-[#b5503a] bg-red-50' : 'border-[#d9cbb8] text-wabi-muted hover:border-[#b5503a] hover:text-[#b5503a]'}`}
+                      className={`text-xs px-2 py-1 rounded-lg border transition-all cursor-pointer ${filters.maxPrice === String(p) ? 'border-[#683520] text-[#683520] bg-orange-50/50' : 'border-[#d9cbb8] text-wabi-muted hover:border-[#683520] hover:text-[#683520]'}`}
                     >
                       {'<'}{(p / 1000).toFixed(0)}k
                     </button>
@@ -247,8 +247,8 @@ const SearchPage = () => {
                       onClick={() => toggleTag(tag)}
                       className={`text-xs px-2.5 py-1 rounded-lg border font-semibold transition-all cursor-pointer ${
                         activeTagList.includes(tag)
-                          ? 'border-[#b5503a] bg-red-50 text-[#b5503a]'
-                          : 'border-[#d9cbb8] text-wabi-muted hover:border-[#5a7247] hover:text-[#5a7247]'
+                          ? 'border-[#683520] bg-[#fcfaf7] text-[#683520]'
+                          : 'border-[#d9cbb8] text-wabi-muted hover:border-[#683520] hover:text-[#683520]'
                       }`}
                       id={`tag-filter-${tag}`}
                     >
@@ -272,7 +272,7 @@ const SearchPage = () => {
                         type="radio" name="status" value={opt.value}
                         checked={filters.status === opt.value}
                         onChange={(e) => updateFilter('status', e.target.value)}
-                        className="accent-[#b5503a]"
+                        className="accent-[#683520]"
                         id={`status-filter-${opt.value || 'all'}`}
                       />
                       <span className="text-sm text-wabi-muted group-hover:text-wabi-text">{opt.label}</span>
@@ -282,7 +282,7 @@ const SearchPage = () => {
               </div>
 
               {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="w-full border-2 border-[#b5503a] text-[#b5503a] text-sm font-bold py-2 rounded-lg hover:bg-[#b5503a] hover:text-white transition-all cursor-pointer" id="sidebar-clear-btn">
+                <button onClick={clearAllFilters} className="w-full border-2 border-[#683520] text-[#683520] text-sm font-bold py-2 rounded-lg hover:bg-[#683520] hover:text-white transition-all cursor-pointer" id="sidebar-clear-btn">
                   <IconX className="w-2.5 h-2.5 inline-block mr-1" /> Xóa Bộ Lọc
                 </button>
               )}
@@ -313,14 +313,14 @@ const SearchPage = () => {
               {/* Sentinel for infinite scroll */}
               <div id="infinite-scroll-sentinel" className="w-full flex flex-col items-center justify-center mt-10 py-6 border-t border-[#d9cbb8]/30">
                 {loading ? (
-                  <div className="flex items-center gap-2 text-[#b5503a] text-sm font-semibold animate-pulse">
-                    <div className="w-5 h-5 border-2 border-t-transparent border-[#b5503a] rounded-full animate-spin" />
+                  <div className="flex items-center gap-2 text-[#683520] text-sm font-semibold animate-pulse">
+                    <div className="w-5 h-5 border-2 border-t-transparent border-[#683520] rounded-full animate-spin" />
                     Đang tải thêm truyện...
                   </div>
                 ) : filters.page < pagination.totalPages ? (
                   <button 
                     onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
-                    className="px-6 py-2.5 border-2 border-[#d9cbb8] text-[#6b5744] hover:text-[#b5503a] hover:border-[#b5503a] transition-all duration-300 rounded-[10px] text-xs font-bold cursor-pointer bg-white shadow-sm"
+                    className="px-6 py-2.5 border-2 border-[#d9cbb8] text-[#6b5744] hover:text-[#683520] hover:border-[#683520] transition-all duration-300 rounded-[10px] text-xs font-bold cursor-pointer bg-white shadow-sm"
                   >
                     Tải thêm truyện
                   </button>
@@ -334,7 +334,7 @@ const SearchPage = () => {
               <IconBook className="w-16 h-16 text-wabi-muted mx-auto mb-4" />
               <h3 className="text-xl font-bold text-[#3d2b1a] font-serif mb-2">Không tìm thấy kết quả</h3>
               <p className="text-wabi-muted mb-6">Thử thay đổi từ khóa hoặc điều chỉnh bộ lọc</p>
-              <button onClick={clearAllFilters} className="bg-[#b5503a] text-white text-sm font-bold px-6 py-2.5 rounded-lg border border-[#b5503a] hover:bg-[#a0402b] hover:border-[#a0402b] transition-all duration-300 cursor-pointer" id="no-results-clear-btn">
+              <button onClick={clearAllFilters} className="bg-[#683520] text-white text-sm font-bold px-6 py-2.5 rounded-lg border border-[#683520] hover:bg-[#522918] hover:border-[#522918] transition-all duration-300 cursor-pointer" id="no-results-clear-btn">
                 Xóa Bộ Lọc
               </button>
             </div>

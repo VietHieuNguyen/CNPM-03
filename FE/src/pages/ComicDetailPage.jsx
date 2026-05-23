@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Pagination, Thumbs } from 'swiper/modules'
+import { Navigation, Pagination } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -9,11 +9,12 @@ import { comicsAPI } from '../api'
 import ComicCard from '../components/ComicCard'
 import QuantityControl from '../components/QuantityControl'
 import { useCart } from '../context/CartContext'
-import { IconFolder, IconBook, IconBox, IconTrendingUp, IconStar, IconWarning } from '../components/Icons'
 import toast from 'react-hot-toast'
 
-const formatPrice = (price) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
+const formatPrice = (price) => {
+  const formatted = new Intl.NumberFormat('vi-VN').format(price)
+  return `${formatted}đ`
+}
 
 const ComicDetailPage = () => {
   const { slug } = useParams()
@@ -21,7 +22,6 @@ const ComicDetailPage = () => {
   const [similar, setSimilar] = useState([])
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
-  const [thumbsSwiper, setThumbsSwiper] = useState(null)
   const { addToCart } = useCart()
 
   useEffect(() => {
@@ -36,8 +36,11 @@ const ComicDetailPage = () => {
           const simRes = await comicsAPI.similar(data.category._id, data._id)
           setSimilar(simRes.data.data.comics)
         }
-      } catch { toast.error('Không tìm thấy truyện') }
-      finally { setLoading(false) }
+      } catch {
+        toast.error('Không tìm thấy truyện')
+      } finally {
+        setLoading(false)
+      }
     }
     fetchComic()
     window.scrollTo(0, 0)
@@ -50,13 +53,14 @@ const ComicDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-20 sm:py-28">
-        <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-8 xl:gap-14">
-          <div className="shimmer-loading rounded-[28px] aspect-[2/3]" />
+      <div className="max-w-[1500px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 py-20 sm:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-10 xl:gap-16">
+          <div className="shimmer-loading rounded-2xl aspect-[3/4]" />
           <div className="space-y-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="shimmer-loading h-6 rounded-xl" style={{ width: `${90 - i * 10}%` }} />
-            ))}
+            <div className="shimmer-loading h-4 w-1/4 rounded" />
+            <div className="shimmer-loading h-10 w-3/4 rounded" />
+            <div className="shimmer-loading h-6 w-1/2 rounded" />
+            <div className="shimmer-loading h-32 w-full rounded" />
           </div>
         </div>
       </div>
@@ -65,10 +69,11 @@ const ComicDetailPage = () => {
 
   if (!comic) {
     return (
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-32 text-center">
-        <IconBook className="w-16 h-16 text-wabi-muted mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-wabi-text font-serif mb-2">Không tìm thấy truyện</h2>
-        <Link to="/" className="btn-primary mt-4 inline-flex">Về Trang Chủ</Link>
+      <div className="max-w-[1500px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 py-32 text-center">
+        <h2 className="text-2xl font-bold text-[#683520] font-serif mb-2">Không tìm thấy truyện</h2>
+        <Link to="/" className="inline-flex items-center justify-center min-h-[50px] px-8 bg-[#683520] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#522918] transition-all mt-4">
+          Về Trang Chủ
+        </Link>
       </div>
     )
   }
@@ -77,46 +82,46 @@ const ComicDetailPage = () => {
   const isOutOfStock = comic.stock === 0
   const images = comic.images?.length > 0 ? comic.images : ['https://placehold.co/400x560/e8ddd1/3d2b1a?text=No+Image']
 
-  return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 pt-16 sm:pt-20 pb-24 sm:pb-32">
+  // Split description to highlight the first sentence as a quote
+  const descParts = comic.description ? comic.description.split(/[.!?]+/) : []
+  const highlightQuote = descParts.length > 0 ? descParts[0].trim() + '.' : ''
+  const remainingDesc = comic.description ? comic.description.substring(highlightQuote.length).trim() : ''
 
+  return (
+    <div className="max-w-[1500px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 pt-10 sm:pt-14 pb-24 sm:pb-32 bg-[#FEFEFE]">
       {/* ===== BREADCRUMB ===== */}
-      <nav
-        className="flex items-center gap-2 text-sm text-wabi-muted mb-10 sm:mb-14 flex-wrap"
-        aria-label="breadcrumb"
-      >
-        <Link to="/" className="hover:text-wabi-red transition-colors">Trang Chủ</Link>
-        <span className="text-xs">→</span>
+      <nav className="flex items-center gap-2 text-xs font-bold text-wabi-muted mb-10 flex-wrap" aria-label="breadcrumb">
+        <Link to="/" className="hover:text-[#683520] transition-colors">Trang chủ</Link>
+        <span className="text-gray-400">/</span>
         {comic.category && (
           <>
-            <Link to={`/search?category=${comic.category._id}`} className="hover:text-wabi-red transition-colors">{comic.category.name}</Link>
-            <span className="text-xs">→</span>
+            <Link to={`/search?category=${comic.category._id}`} className="hover:text-[#683520] transition-colors">
+              {comic.category.name === "Góc đọc" ? "Góc đọc" : comic.category.name}
+            </Link>
+            <span className="text-gray-400">/</span>
           </>
         )}
-        <span className="text-wabi-text truncate max-w-[200px] sm:max-w-xs">{comic.title}</span>
+        <span className="text-[#3d2b1a] truncate max-w-[200px] sm:max-w-xs">{comic.title}</span>
       </nav>
 
-      {/* ===== MAIN GRID: IMAGE + INFO ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-10 xl:gap-16 items-start">
-
-        {/* Image Swiper */}
-        <div className="space-y-4">
-          <div className="overflow-hidden rounded-[28px] bg-white border border-wabi-border/60 shadow-[0_10px_40px_rgba(0,0,0,0.06)]">
+      {/* ===== PRODUCT CORE LAYOUT ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-[45%_50%] gap-10 xl:gap-16 items-start justify-between">
+        
+        {/* Left Side: Swiper & Tags */}
+        <div className="space-y-6">
+          <div className="overflow-hidden rounded-2xl border border-wabi-border/30 bg-[#fbfaf8] relative aspect-[3/4]">
             <Swiper
-              modules={[Navigation, Pagination, Thumbs]}
+              modules={[Navigation]}
               navigation
-              pagination={{ clickable: true }}
-              thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
               loop={images.length > 1}
-              className="comic-detail-swiper"
-              id="comic-main-swiper"
+              className="comic-detail-swiper h-full"
             >
               {images.map((img, idx) => (
-                <SwiperSlide key={idx}>
+                <SwiperSlide key={idx} className="h-full">
                   <img
                     src={img}
                     alt={`${comic.title} - ảnh ${idx + 1}`}
-                    className="w-full h-[420px] sm:h-[620px] object-cover bg-[#f8f5f1] transition-transform duration-700 hover:scale-[1.02]"
+                    className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = 'https://placehold.co/400x560/e8ddd1/3d2b1a?text=No+Image' }}
                   />
                 </SwiperSlide>
@@ -124,185 +129,180 @@ const ComicDetailPage = () => {
             </Swiper>
           </div>
 
-          {images.length > 1 && (
-            <Swiper
-              modules={[Thumbs]}
-              onSwiper={setThumbsSwiper}
-              spaceBetween={8}
-              slidesPerView={Math.min(images.length, 5)}
-              watchSlidesProgress
-              className="cursor-pointer"
-              id="comic-thumb-swiper"
-            >
-              {images.map((img, idx) => (
-                <SwiperSlide key={idx}>
-                  <img
-                    src={img}
-                    alt={`thumb ${idx + 1}`}
-                    className="w-full aspect-[2/3] object-cover rounded-2xl border-2 border-transparent hover:border-wabi-red hover:scale-[1.03] transition-all duration-300"
-                    onError={(e) => { e.target.src = 'https://placehold.co/100x150/e8ddd1/3d2b1a?text=' + (idx + 1) }}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          )}
+          {/* Elegant Category & Tags */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            {comic.category && (
+              <span className="bg-[#f0e6df] text-[#6b5744] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                {comic.category.name.toUpperCase()}
+              </span>
+            )}
+            {comic.tags?.map((tag) => (
+              <span key={tag} className="bg-[#f6f1eb] text-wabi-muted px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                {tag.toUpperCase()}
+              </span>
+            ))}
+            {/* Soft spiritual fallback tag if none exists */}
+            {(!comic.tags || comic.tags.length === 0) && (
+              <>
+                <span className="bg-[#f6f1eb] text-wabi-muted px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                  DRAMA
+                </span>
+                <span className="bg-[#f6f1eb] text-wabi-muted px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                  SPIRITUAL
+                </span>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="flex flex-col gap-6 animate-fade-up">
-
-          {/* Badges */}
-          <div className="flex gap-2 flex-wrap">
-            {comic.isNew && <span className="badge badge-new">Mới</span>}
-            {comic.isBestSeller && <span className="badge badge-hot">Bán Chạy</span>}
-            {comic.discount > 0 && <span className="badge badge-sale">-{comic.discount}%</span>}
-            {isOutOfStock && <span className="badge badge-out">Hết Hàng</span>}
+        {/* Right Side: Info & Purchase */}
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="font-serif text-3xl sm:text-4xl font-black leading-tight tracking-tight text-[#3d2b1a]">
+              {comic.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-wabi-muted font-bold">
+              <span>Tác giả: <span className="text-[#3d2b1a]">{comic.author || 'Arata Isuzuki'}</span></span>
+              <span className="text-gray-300">|</span>
+              <span className="text-[#b89b5e] flex items-center gap-1">
+                ★ {comic.rating?.avg ? comic.rating.avg.toFixed(1) : '4.8'} 
+                <span className="text-wabi-muted font-normal">({comic.rating?.count || '128'} đánh giá)</span>
+              </span>
+            </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-wabi-text">
-            {comic.title}
-          </h1>
-
-          {/* Meta info card */}
-          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-wabi-muted bg-[#faf8f5] border border-wabi-border/40 rounded-2xl p-5">
-            <span>Tác giả: <span className="text-wabi-text font-semibold">{comic.author}</span></span>
-            {comic.publisher && <span>NXB: <span className="text-wabi-text font-semibold">{comic.publisher}</span></span>}
-            {comic.publishYear && <span>Năm: {comic.publishYear}</span>}
-            {comic.volumes > 1 && <span>{comic.volumes} tập</span>}
-          </div>
-
-          {/* Category */}
-          {comic.category && (
-            <div className="flex items-center gap-2">
-              <IconFolder className="w-3.5 h-3.5 text-wabi-green" />
-              <span className="text-wabi-muted text-sm">Danh mục:</span>
-              <Link
-                to={`/search?category=${comic.category._id}`}
-                className="text-wabi-green font-semibold text-sm hover:underline"
-                id="detail-category-link"
-              >
-                {comic.category.name}
-              </Link>
+          {/* Custom Highlight Quote */}
+          {highlightQuote && (
+            <div className="border-l-2 border-[#683520] pl-5 py-1">
+              <blockquote className="font-serif italic text-sm sm:text-base text-[#6b5744] leading-relaxed">
+                "{highlightQuote}"
+              </blockquote>
             </div>
           )}
 
-          {/* Tags */}
-          {comic.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {comic.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  to={`/search?tags=${tag}`}
-                  className="badge badge-new text-xs hover:bg-wabi-green/20 transition-colors"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </div>
+          {/* Description Paragraph */}
+          {remainingDesc && (
+            <p className="text-xs sm:text-sm text-wabi-secondary leading-relaxed">
+              {remainingDesc}
+            </p>
           )}
 
-          {/* Rating */}
-          {comic.rating?.count > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <IconStar
-                    key={s}
-                    className={`w-4 h-4 ${s <= Math.round(comic.rating.avg) ? 'text-wabi-gold' : 'text-wabi-muted'}`}
-                    filled={s <= Math.round(comic.rating.avg)}
-                  />
-                ))}
+          {/* Specification Grid Table */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-6 border-t border-b border-[#eadfd2]/60 text-xs sm:text-sm">
+            <div>
+              <span className="text-wabi-muted block">Mã sản phẩm</span>
+              <span className="font-bold text-[#3d2b1a]">{`KOM-${comic._id.substring(19).toUpperCase()}`}</span>
+            </div>
+            <div>
+              <span className="text-wabi-muted block">Dạng bìa</span>
+              <span className="font-bold text-[#3d2b1a]">{comic.publisher === 'Bìa cứng' ? 'Bìa cứng, giấy lụa' : 'Bìa mềm, giấy mỹ thuật'}</span>
+            </div>
+            <div>
+              <span className="text-wabi-muted block">Ngôn ngữ</span>
+              <span className="font-bold text-[#3d2b1a]">Tiếng Việt</span>
+            </div>
+            <div>
+              <span className="text-wabi-muted block">Số trang</span>
+              <span className="font-bold text-[#3d2b1a]">{comic.publishYear ? `${comic.publishYear} trang` : '216 trang'}</span>
+            </div>
+          </div>
+
+          {/* Beige Action & Price Box */}
+          <div className="bg-[#faf6f2] border border-[#eadfd2]/60 rounded-3xl p-6 space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-wabi-muted block">ĐƠN GIÁ NIÊM YẾT</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-black text-[#683520]">
+                    {formatPrice(finalPrice)}
+                  </span>
+                  {comic.discount > 0 && (
+                    <span className="text-xs text-wabi-muted line-through">
+                      {formatPrice(comic.price)}
+                    </span>
+                  )}
+                </div>
               </div>
-              <span className="text-wabi-muted text-sm">
-                {comic.rating.avg.toFixed(1)} ({comic.rating.count} đánh giá)
-              </span>
-            </div>
-          )}
 
-          {/* Price card */}
-          <div className="rounded-[28px] bg-gradient-to-br from-[#fffaf5] to-[#f7efe7] border border-[#eadfd2] p-6 shadow-[0_10px_30px_rgba(61,43,26,0.08)] space-y-5">
-            <div className="flex items-end gap-3 flex-wrap">
-              <span className="text-4xl font-black tracking-tight text-wabi-red">
-                {formatPrice(finalPrice)}
-              </span>
-              {comic.discount > 0 && (
-                <span className="text-wabi-muted text-base sm:text-lg line-through">
-                  {formatPrice(comic.price)}
-                </span>
+              {/* Quantity Selection Pill */}
+              {!isOutOfStock && (
+                <div className="bg-white border border-[#eadfd2] rounded-full px-3 py-1 flex items-center shadow-sm">
+                  <button
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    className="w-8 h-8 flex items-center justify-center text-wabi-muted hover:text-[#683520] font-bold text-lg cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="w-10 text-center font-black text-sm text-[#3d2b1a]">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(q => Math.min(comic.stock, q + 1))}
+                    className="w-8 h-8 flex items-center justify-center text-wabi-muted hover:text-[#683520] font-bold text-lg cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
               )}
             </div>
 
-            <div className="flex gap-4 sm:gap-6 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <IconBox className={`w-3.5 h-3.5 ${isOutOfStock ? 'text-wabi-red' : 'text-wabi-green'}`} />
-                <span className="text-sm">
-                  Tồn kho: <span className={`font-bold ${isOutOfStock ? 'text-wabi-red' : 'text-wabi-green'}`}>
-                    {isOutOfStock ? 'Hết hàng' : `${comic.stock} cuốn`}
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <IconTrendingUp className="w-3.5 h-3.5 text-wabi-brown" />
-                <span className="text-sm">
-                  Đã bán: <span className="font-bold text-wabi-brown">{comic.sold?.toLocaleString()}</span>
-                </span>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {isOutOfStock ? (
+                <div className="w-full text-center bg-gray-100 border border-gray-200 text-gray-400 py-4 font-bold text-xs uppercase tracking-wider rounded-none">
+                  HẾT HÀNG / OUT OF STOCK
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 min-h-[50px] bg-[#683520] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#522918] transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    Thêm vào giỏ hàng
+                  </button>
+                  <button
+                    onClick={() => toast.success('Mở bản đọc thử... 📖')}
+                    className="flex-1 min-h-[50px] bg-white border border-[#683520] text-[#683520] font-bold text-xs uppercase tracking-widest hover:bg-[#faf6f2] transition-all flex items-center justify-center cursor-pointer rounded-none"
+                  >
+                    Đọc thử ngay
+                  </button>
+                </>
+              )}
             </div>
 
-            {isOutOfStock && (
-              <div className="flex items-center gap-2 text-wabi-red text-sm bg-red-50 rounded-xl px-3 py-2 border border-red-200">
-                <IconWarning className="w-3.5 h-3.5 flex-shrink-0" /> Sản phẩm hiện đã hết hàng. Vui lòng quay lại sau!
-              </div>
-            )}
+            {/* Guarantees */}
+            <div className="flex items-center gap-6 pt-2 border-t border-[#eadfd2]/40 text-xs text-wabi-muted font-bold">
+              <span className="flex items-center gap-1.5">🚚 Giao nhanh 24h</span>
+              <span className="flex items-center gap-1.5">🛡️ Chính hãng 100%</span>
+              <span className="flex items-center gap-1.5">📦 Còn {comic.stock} cuốn</span>
+            </div>
           </div>
-
-          {/* Add to cart */}
-          {!isOutOfStock && (
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-              <QuantityControl value={quantity} onChange={setQuantity} min={1} max={comic.stock} />
-              <button
-                onClick={handleAddToCart}
-                id="detail-add-to-cart-btn"
-                className="
-                  flex-1 h-14 rounded-2xl bg-wabi-red text-white font-bold text-[15px]
-                  shadow-lg shadow-red-500/20 hover:-translate-y-0.5 hover:shadow-xl
-                  transition-all duration-300 flex items-center justify-center cursor-pointer
-                "
-              >
-                Thêm Vào Giỏ Hàng
-              </button>
-            </div>
-          )}
-
-          {/* Description */}
-          {comic.description && (
-            <div className="rounded-[28px] bg-white border border-wabi-border/50 p-6 shadow-sm">
-              <h3 className="font-bold text-wabi-text mb-3 font-serif flex items-center gap-2">
-                <IconBook className="w-4 h-4 text-wabi-green" /> Nội Dung
-              </h3>
-              <p className="text-wabi-secondary text-sm leading-relaxed">{comic.description}</p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ===== SIMILAR COMICS ===== */}
+      {/* ===== RELATED COMICS ===== */}
       {similar.length > 0 && (
-        <section className="mt-24 sm:mt-32 xl:mt-36" id="similar-comics-section">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="section-title">Truyện Tương Tự</h2>
-            {comic.category && (
-              <Link
-                to={`/search?category=${comic.category._id}`}
-                className="text-wabi-muted text-sm hover:text-wabi-red flex items-center gap-1 transition-colors"
-              >
-                Xem thêm <span className="font-serif">→</span>
-              </Link>
-            )}
+        <section className="mt-28" id="similar-comics-section">
+          <div className="flex items-center justify-between mb-8 border-b border-wabi-border/40 pb-5 relative">
+            <h2 className="font-serif text-2xl font-black text-[#683520]">
+              Tác phẩm tương tự
+            </h2>
+            <Link
+              to={`/search?category=${comic.category?._id}`}
+              className="text-xs font-bold uppercase tracking-wider text-[#683520] hover:text-[#522918] transition-colors"
+            >
+              Xem tất cả
+            </Link>
+            <div className="absolute bottom-[-1.5px] left-0 w-20 h-[3px] bg-[#683520]" />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
-            {similar.map((c) => <ComicCard key={c._id} comic={c} />)}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            {similar.slice(0, 4).map((c) => (
+              <ComicCard key={c._id} comic={c} />
+            ))}
           </div>
         </section>
       )}

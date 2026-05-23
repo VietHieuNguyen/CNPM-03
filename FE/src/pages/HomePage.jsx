@@ -4,52 +4,47 @@ import { comicsAPI, categoriesAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
 import ComicCard from "../components/ComicCard";
 import HorizontalCarousel from "../components/HorizontalCarousel";
-import { IconGift } from "../components/Icons";
 import toast from "react-hot-toast";
 import heroImg from "../assets/image.png";
 
-const SectionTitle = ({ title, linkTo, themeColor = "red" }) => {
-  // Determine matching style for "Xem tất cả" button based on themeColor
-  const outlineStyles = {
-    red: "text-[#b5503a] hover:text-[#a0402b]",
-    green: "text-[#5a7247] hover:text-[#465a36]",
-    gold: "text-[#b89b5e] hover:text-[#a3874e]",
-  };
+const formatPrice = (price) => {
+  const formatted = new Intl.NumberFormat('vi-VN').format(price);
+  return `${formatted}đ`;
+};
 
-  const borderLeftGradients = {
-    red: "before:bg-gradient-to-b before:from-[#b5503a] before:to-[#d4826e]",
-    green: "before:bg-gradient-to-b before:from-[#5a7247] before:to-[#7d9b68]",
-    gold: "before:bg-gradient-to-b before:from-[#b89b5e] before:to-[#c4a882]",
-  };
-
+const SectionTitle = ({ label, title, linkTo }) => {
   return (
-    <div className="flex items-center justify-between mb-7 sm:mb-8 flex-wrap gap-3">
-      <h2
-        className={`section-title flex items-center gap-2 ${borderLeftGradients[themeColor] || borderLeftGradients.red}`}
-      >
-        {title}
-      </h2>
-      {linkTo && (
-        <Link
-          to={linkTo}
-          className={`py-1.5 text-sm font-bold transition-all duration-300 ${
-            outlineStyles[themeColor] || outlineStyles.red
-          }`}
-        >
-          Xem tất cả <span className="font-serif">→</span>
-        </Link>
+    <div className="flex flex-col space-y-2 mb-8 border-b border-wabi-border/40 pb-5 relative">
+      {label && (
+        <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9a8672]">
+          {label}
+        </span>
       )}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#683520]">
+          {title}
+        </h2>
+        {linkTo && (
+          <Link
+            to={linkTo}
+            className="text-xs font-bold uppercase tracking-wider text-[#683520] hover:text-[#522918] transition-colors"
+          >
+            Xem tất cả truyện ➔
+          </Link>
+        )}
+      </div>
+      <div className="absolute bottom-[-1.5px] left-0 w-20 h-[3px] bg-[#683520]" />
     </div>
   );
 };
 
 const SkeletonCard = () => (
-  <div className="comic-card">
-    <div className="shimmer-loading w-full aspect-[2/3]" />
-    <div className="p-4 space-y-3">
-      <div className="shimmer-loading h-3 w-3/4 rounded" />
-      <div className="shimmer-loading h-4 w-full rounded" />
-      <div className="shimmer-loading h-3 w-1/2 rounded" />
+  <div className="flex flex-col space-y-3">
+    <div className="shimmer-loading w-full aspect-[3/4] rounded-2xl" />
+    <div className="space-y-2">
+      <div className="shimmer-loading h-3 w-1/3 rounded" />
+      <div className="shimmer-loading h-4 w-3/4 rounded" />
+      <div className="shimmer-loading h-3.5 w-1/2 rounded" />
     </div>
   </div>
 );
@@ -79,7 +74,7 @@ const HomePage = () => {
         setMostViewed(mostRes.data.data.comics);
         setCategories(catRes.data.data.categories);
       } catch {
-        toast.error("Không thể tải dữ liệu");
+        toast.error("Không thể tải dữ liệu trang chủ");
       } finally {
         setLoading(false);
       }
@@ -89,266 +84,63 @@ const HomePage = () => {
 
   return (
     <div className="w-full bg-[#FEFEFE]">
-      <div className="w-full px-0 py-0">
-        {/* ===== HERO ===== */}
-        <section className="w-full bg-[#FEFEFE] mb-16 sm:mb-20 xl:mb-24 animate-fade-up">
-<div
-  className="
-relative
-overflow-hidden
-w-full
-bg-[#FEFEFE]
-min-h-[760px]
-px-6
-sm:px-10
-lg:px-20
-xl:px-28
-2xl:px-36
-py-16
-lg:py-24
-flex
-flex-col
-lg:flex-row
-items-center
-justify-between
-gap-16
-"
->
-            {/* Left Side Content */}
-            <div
-  className="
-relative
-z-10
-w-full
-lg:w-[46%]
-space-y-8
-"
->
-              {user ? (
-                <>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5a7247] to-[#7d9b68] flex items-center justify-center text-lg sm:text-xl font-bold text-white shadow-warm">
-                      {user.name?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-[#9a8672] text-xs sm:text-sm">
-                        Chào mừng trở lại
-                      </p>
-                      <p className="text-[#3d2b1a] font-bold text-base sm:text-lg">
-                        {user.name}
-                      </p>
-                    </div>
-                  </div>
-                  <h1
-                    className="
-font-serif
-text-4xl
-sm:text-5xl
-lg:text-7xl
-font-black
-tracking-tight
-mb-6
-text-[#3d2b1a]
-leading-[1.05]
-"
-                  >
-                    Khám phá
-                    <br />
-                    <span className="text-[#b5503a]">
-                      thế giới truyện tranh
-                    </span>
-                  </h1>
-                  <p
-                    className="
-text-[#6b5744]
-mb-10
-leading-9
-text-[15px]
-sm:text-xl
-max-w-2xl
-"
-                  >
-                    Hàng nghìn đầu truyện manga, manhwa, manhua chất lượng cao.
-                    Cập nhật liên tục, giao hàng nhanh toàn quốc!
-                  </p>
-                  <div className="flex flex-wrap items-center gap-6 pt-6">
-                    <Link
-                      to="/search"
-                      className="
-inline-flex
-items-center
-justify-center
-min-h-[64px]
-px-10
-sm:px-14
-rounded-[20px]
-bg-[#b5503a]
-text-white
-text-lg
-font-bold
-tracking-tight
-border
-border-[#b5503a]
-shadow-[0_14px_35px_rgba(181,80,58,0.22)]
-transition-all
-duration-300
-hover:bg-[#a34531]
-hover:-translate-y-1
-hover:shadow-[0_18px_40px_rgba(181,80,58,0.28)]
-"
-                      id="hero-explore-btn"
-                    >
-                      Khám Phá Ngay
-                    </Link>
-                    <Link
-                      to="/search?sort=bestseller"
-                      className="border-2 border-[#b5503a] text-[#b5503a] text-sm sm:text-base font-bold px-10 py-4 rounded-[10px] hover:bg-[#b5503a] hover:text-white transition-all duration-300 cursor-pointer"
-                      id="hero-bestseller-btn"
-                    >
-                      Bán Chạy
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="inline-flex items-center gap-1.5 bg-[#FEFEFE] text-[#b5503a] text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-sm">
-                    <span className="text-xs">★</span> THIÊN ĐƯỜNG TRUYỆN TRANH
-                  </div>
-                  <h1
-                    className="
-font-serif
-text-4xl
-sm:text-5xl
-lg:text-7xl
-font-black
-tracking-tight
-mb-6
-text-[#3d2b1a]
-leading-[1.05]
-"
-                  >
-                    <span className="text-[#b5503a]">MangaStore</span>
-                    <br />
-                    Xứ Sở Manga
-                  </h1>
-                  <p
-                    className="
-text-[#6b5744]
-mb-10
-leading-9
-text-[15px]
-sm:text-xl
-max-w-2xl
-"
-                  >
-                    Hàng nghìn đầu truyện manga, manhwa, manhua chất lượng cao.
-                    <br />
-                    Đăng nhập để nhận ưu đãi độc quyền dành cho thành viên!
-                  </p>
-                  <div className="flex flex-wrap items-center gap-6 pt-6">
-                    <Link
-                      to="/register"
-                      className="
-inline-flex
-items-center
-justify-center
-min-h-[64px]
-px-10
-sm:px-14
-rounded-[20px]
-bg-[#b5503a]
-text-white
-text-lg
-font-bold
-tracking-tight
-border
-border-[#b5503a]
-shadow-[0_14px_35px_rgba(181,80,58,0.22)]
-transition-all
-duration-300
-hover:bg-[#a34531]
-hover:-translate-y-1
-hover:shadow-[0_18px_40px_rgba(181,80,58,0.28)]
-"
-                      id="hero-register-btn"
-                    >
-                      Tham Gia Miễn Phí
-                    </Link>
-                    <Link
-                      to="/search"
-                      className="
-inline-flex
-items-center
-justify-center
-min-h-[64px]
-px-10
-sm:px-14
-rounded-[20px]
-border-2
-border-[#5a7247]
-bg-white/70
-text-[#5a7247]
-text-lg
-font-bold
-tracking-tight
-transition-all
-duration-300
-hover:bg-[#5a7247]
-hover:text-white
-hover:-translate-y-1
-"
-                      id="hero-browse-btn"
-                    >
-                      Xem Truyện
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Right Side Illustration */}
-            <div
-  className="
-relative
-w-full
-lg:w-[54%]
-flex
-justify-center
-lg:justify-end
-items-center
-"
->
-              <img
-                src={heroImg}
-                alt="MangaStore Banner Artwork"
-                className="
-w-full
-max-w-[980px]
-object-contain
-animate-float
-select-none
-"
-              />
+      {/* ===== HERO ===== */}
+      <section className="w-full bg-[#fcfaf7] border-b border-[#eadfd2]/60 animate-fade-up">
+        <div className="max-w-[1500px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 py-20 lg:py-28 flex flex-col lg:flex-row items-center justify-between gap-16">
+          {/* Left Content */}
+          <div className="relative z-10 w-full lg:w-[48%] space-y-6">
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9a8672] block">
+              KHO TÀNG TRUYỆN TRANH TINH TUYỂN
+            </span>
+            
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6.5xl font-black tracking-tight text-[#3d2b1a] leading-[1.1] space-y-2">
+              <div>Gói ghém bình yên</div>
+              <div className="text-[#683520] italic font-normal">trong từng trang sách.</div>
+            </h1>
+            
+            <p className="text-[#6b5744] leading-relaxed text-sm sm:text-base max-w-xl">
+              Komorebi Manga mang đến những tác phẩm mang đậm hơi thở cuộc sống, giúp bạn tìm thấy niềm vui từ những điều giản đơn nhất.
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4 pt-6">
+              <Link
+                to="/search"
+                className="inline-flex items-center justify-center min-h-[50px] px-8 bg-[#683520] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#522918] transition-all rounded-none"
+              >
+                Mua sắm ngay
+              </Link>
+              <Link
+                to="/search?sort=newest"
+                className="inline-flex items-center justify-center min-h-[50px] px-8 border border-[#eadfd2] text-[#6b5744] text-xs font-bold uppercase tracking-widest hover:bg-white transition-all rounded-none"
+              >
+                Xem bộ sưu tập
+              </Link>
             </div>
           </div>
-        </section>
 
-        {/* ===== CATEGORIES ===== */}
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12">
-        {categories.length > 0 && (
-          <section className="mb-16 sm:mb-20 xl:mb-24">
-            <SectionTitle
-              title="Danh Mục"
-              linkTo="/search"
-              themeColor="green"
+          {/* Right Image */}
+          <div className="relative w-full lg:w-[48%] flex justify-center lg:justify-end items-center">
+            <img
+              src={heroImg}
+              alt="Komorebi Manga Book Showcase"
+              className="w-full max-w-[580px] object-contain animate-float select-none"
             />
-            <div className="flex flex-wrap gap-3">
+          </div>
+        </div>
+      </section>
+
+      {/* Main Container */}
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 py-[100px] space-y-[120px]">
+        {/* ===== CATEGORIES ===== */}
+        {categories.length > 0 && (
+          <section className="space-y-6">
+            <SectionTitle label="DANH MỤC" title="Khám phá Thể loại" />
+            <div className="flex flex-wrap gap-2.5">
               {categories.map((cat) => (
                 <Link
                   key={cat._id}
                   to={`/search?category=${cat._id}`}
-                  className="flex items-center gap-2 bg-white border border-[#d9cbb8] px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-semibold text-[#6b5744] hover:text-[#b5503a] hover:border-[#b5503a]/30 hover:shadow-warm transition-all"
-                  id={`category-chip-${cat.slug}`}
+                  className="bg-[#faf8f5] border border-[#d9cbb8] px-5 py-2.5 rounded-full text-xs font-bold text-[#6b5744] hover:text-white hover:bg-[#683520] hover:border-[#683520] transition-all shadow-sm"
                 >
                   {cat.name}
                 </Link>
@@ -357,199 +149,103 @@ select-none
           </section>
         )}
 
-        {/* ===== FEATURED ===== */}
-        <section className="mb-16 sm:mb-20 xl:mb-24">
-          <SectionTitle
-            title="Khuyến Mãi Nổi Bật"
-            linkTo="/search?isFeatured=true"
-            themeColor="red"
-          />
+        {/* ===== FEATURED (Sản phẩm nổi bật) ===== */}
+        <section className="space-y-8">
+          <SectionTitle label="CỬA HÀNG" title="Sản phẩm nổi bật" linkTo="/search?isFeatured=true" />
+
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 xl:gap-6">
-              {Array(6)
-                .fill(0)
-                .map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {Array(4).fill(0).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : featured.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 xl:gap-6">
-              {featured.slice(0, 6).map((comic) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {featured.slice(0, 4).map((comic) => (
                 <ComicCard key={comic._id} comic={comic} />
               ))}
             </div>
           ) : (
-            <p
-              className="text-[#9a8672] text-center py-8 font-serif italic"
-              id="featured-empty-placeholder"
-            >
-              Chưa có truyện nổi bật
-            </p>
+            <p className="text-[#9a8672] text-center py-8 font-serif italic">Không có tác phẩm nổi bật nào</p>
           )}
         </section>
 
-        {/* ===== NEW ===== */}
-        <section className="mb-16 sm:mb-20 xl:mb-24">
-          <SectionTitle
-            title="Mới Nhất"
-            linkTo="/search?sort=newest"
-            themeColor="green"
-          />
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 xl:gap-6">
-              {Array(6)
-                .fill(0)
-                .map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
-            </div>
-          ) : newComics.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 xl:gap-6">
-              {newComics.slice(0, 6).map((comic) => (
-                <ComicCard key={comic._id} comic={comic} />
-              ))}
-            </div>
-          ) : (
-            <p
-              className="text-[#9a8672] text-center py-8 font-serif italic"
-              id="new-empty-placeholder"
-            >
-              Chưa có truyện mới
-            </p>
-          )}
-        </section>
-
-        {/* ===== PROMO BANNER ===== */}
-        <section className="mb-16 sm:mb-20 xl:mb-24">
-          <div
-            className="
-bg-[#fdfbf7]
-rounded-[32px]
-px-6
-py-10
-sm:px-10
-sm:py-14
-text-center
-border
-border-[#eadfd2]
-relative
-overflow-hidden
-flex
-flex-col
-items-center
-shadow-[0_10px_35px_rgba(61,43,26,0.05)]
-"
-          >
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="w-14 h-14 rounded-full bg-[#b5503a] flex items-center justify-center shadow-warm mb-4">
-                <IconGift className="w-7 h-7 text-white" />
-              </div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#3d2b1a] mb-3">
-                Ưu Đãi Thành Viên Mới
+        {/* ===== NEWSLETTER (Gửi gắm tâm tình) ===== */}
+        <section>
+          <div className="bg-[#f6f1eb] rounded-[28px] p-8 sm:p-12 shadow-sm border border-[#eadfd2]/40 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-3 text-center md:text-left max-w-xl">
+              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#683520]">
+                Gửi gắm tâm tình
               </h2>
-              <p className="text-[#6b5744] mb-4 max-w-lg mx-auto text-xs sm:text-base leading-relaxed">
-                Đăng ký hôm nay và nhận ngay voucher{" "}
-                <span className="font-bold text-[#b5503a]">giảm 20%</span> cho
-                đơn hàng đầu tiên!
+              <p className="text-[#6b5744] text-xs sm:text-sm leading-relaxed">
+                Đăng ký để nhận những bản tin về nghệ thuật và ưu đãi sớm nhất từ Komorebi.
               </p>
-              {!user && (
-                <Link
-                  to="/register"
-                  className="
-inline-flex
-items-center
-justify-center
-min-h-[64px]
-px-10
-sm:px-14
-rounded-[20px]
-bg-[#b5503a]
-text-white
-text-lg
-font-bold
-tracking-tight
-border
-border-[#b5503a]
-shadow-[0_14px_35px_rgba(181,80,58,0.22)]
-transition-all
-duration-300
-hover:bg-[#a34531]
-hover:-translate-y-1
-hover:shadow-[0_18px_40px_rgba(181,80,58,0.28)]
-"
-                  id="promo-register-btn"
-                >
-                  Nhận Ưu Đãi Ngay
-                </Link>
-              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full sm:w-auto">
+              <input
+                type="email"
+                placeholder="Địa chỉ email của bạn"
+                className="bg-white border border-[#eadfd2] text-[#3d2b1a] placeholder-wabi-muted text-xs px-5 py-3.5 focus:outline-none focus:border-[#683520] min-w-[280px] rounded-none"
+              />
+              <button
+                onClick={() => toast.success("Cảm ơn bạn đã đăng ký nhận bản tin! 🌸")}
+                className="bg-[#683520] text-white hover:bg-[#522918] transition-all font-bold text-xs uppercase tracking-wider px-8 py-3.5 flex items-center justify-center cursor-pointer rounded-none"
+              >
+                Đăng ký
+              </button>
             </div>
           </div>
         </section>
 
-        {/* ===== BESTSELLER ===== */}
-        <section className="mb-16 sm:mb-20 xl:mb-24">
-          <SectionTitle
-            title="Bán Chạy Nhất"
-            linkTo="/search?sort=bestseller"
-            themeColor="gold"
-          />
+        {/* ===== WABI-SABI PHILOSOPHY ===== */}
+        <section className="py-6 border-l-2 border-[#683520] pl-6 sm:pl-10">
+          <div className="space-y-4">
+            <h3 className="font-serif text-xl sm:text-2xl font-black text-[#683520]">
+              Triết lý Wabi-sabi
+            </h3>
+            <blockquote className="font-serif italic text-sm sm:text-base text-[#6b5744] leading-relaxed max-w-4xl">
+              "Trong nghệ thuật truyện tranh của Komorebi, chúng tôi trân trọng những nét vẽ tay mộc mạc và sự phai màu của giấy theo năm tháng. Mỗi cuốn sách không chỉ là một sản phẩm, mà là một hành trình tìm về sự tĩnh lặng."
+            </blockquote>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9a8672] mt-3 block">
+              — KOMOREBI FOUNDERS
+            </span>
+          </div>
+        </section>
+
+        {/* ===== 10 BESTSELLERS HORIZONTAL ===== */}
+        <section className="space-y-8">
+          <SectionTitle label="XU HƯỚNG" title="10 Sản phẩm bán chạy nhất" linkTo="/search?sort=bestseller" />
           {loading ? (
             <div className="flex gap-6 overflow-hidden py-1">
-              {Array(6)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-[190px] sm:w-[220px] lg:w-[240px] xl:w-[255px] flex-shrink-0"
-                  >
-                    <SkeletonCard />
-                  </div>
-                ))}
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="w-[200px] flex-shrink-0">
+                  <SkeletonCard />
+                </div>
+              ))}
             </div>
           ) : bestseller.length > 0 ? (
             <HorizontalCarousel comics={bestseller} showRanking={true} />
           ) : (
-            <p
-              className="text-[#9a8672] text-center py-8 font-serif italic"
-              id="bestseller-empty-placeholder"
-            >
-              Chưa có dữ liệu bán chạy
-            </p>
+            <p className="text-[#9a8672] text-center py-8 font-serif italic">Không có sản phẩm bán chạy</p>
           )}
         </section>
 
-        {/* ===== MOST VIEWED ===== */}
-        <section className="mb-16 sm:mb-20 xl:mb-24">
-          <SectionTitle
-            title="Xem Nhiều Nhất"
-            linkTo="/search?sort=rating"
-            themeColor="red"
-          />
+        {/* ===== MOST VIEWED HORIZONTAL ===== */}
+        <section className="space-y-8">
+          <SectionTitle label="PHỔ BIẾN" title="Sản phẩm xem nhiều nhất" linkTo="/search?sort=rating" />
           {loading ? (
             <div className="flex gap-6 overflow-hidden py-1">
-              {Array(6)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-[190px] sm:w-[220px] lg:w-[240px] xl:w-[255px] flex-shrink-0"
-                  >
-                    <SkeletonCard />
-                  </div>
-                ))}
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="w-[200px] flex-shrink-0">
+                  <SkeletonCard />
+                </div>
+              ))}
             </div>
           ) : mostViewed.length > 0 ? (
             <HorizontalCarousel comics={mostViewed} showRanking={false} />
           ) : (
-            <p
-              className="text-[#9a8672] text-center py-8 font-serif italic"
-              id="mostviewed-empty-placeholder"
-            >
-              Chưa có dữ liệu lượt xem
-            </p>
+            <p className="text-[#9a8672] text-center py-8 font-serif italic">Không có sản phẩm xem nhiều</p>
           )}
         </section>
-      </div>
       </div>
     </div>
   );

@@ -36,12 +36,8 @@ const Navbar = () => {
       duration-300
       ${
         active
-          ? green
-            ? "text-[#5a7247]"
-            : "text-[#b5503a]"
-          : green
-            ? "text-[#6b5744] hover:text-[#5a7247]"
-            : "text-[#6b5744] hover:text-[#b5503a]"
+          ? "text-[#683520]"
+          : "text-[#6b5744] hover:text-[#683520]"
       }
     `;
 
@@ -76,23 +72,17 @@ const Navbar = () => {
         <Link to="/" className="group flex items-center flex-shrink-0">
           <span
             className="
-              text-[30px]
+              font-serif
+              text-[24px]
               font-black
-              tracking-tight
-              text-[#3d2b1a]
+              tracking-wide
+              text-[#683520]
+              transition-colors
+              duration-300
+              group-hover:text-[#522918]
             "
           >
-            Manga
-            <span
-              className="
-                text-[#b5503a]
-                transition-colors
-                duration-300
-                group-hover:text-[#a0402b]
-              "
-            >
-              Store
-            </span>
+            Komorebi Manga
           </span>
         </Link>
 
@@ -108,9 +98,9 @@ const Navbar = () => {
           "
         >
           <Link to="/" className={navClass(isActive("/"))}>
-            Trang Chủ
+            Trang chủ
             {isActive("/") && (
-              <span className="absolute bottom-0 left-0 h-[3px] w-full rounded-full bg-[#b5503a]" />
+              <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#683520]" />
             )}
           </Link>
 
@@ -122,7 +112,7 @@ const Navbar = () => {
           >
             Truyện
             {location.pathname === "/search" && !location.search && (
-              <span className="absolute bottom-0 left-0 h-[3px] w-full rounded-full bg-[#b5503a]" />
+              <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#683520]" />
             )}
           </Link>
 
@@ -130,9 +120,9 @@ const Navbar = () => {
             to="/search?sort=bestseller"
             className={navClass(location.search.includes("sort=bestseller"))}
           >
-            Bán Chạy
+            Bán chạy
             {location.search.includes("sort=bestseller") && (
-              <span className="absolute bottom-0 left-0 h-[3px] w-full rounded-full bg-[#b5503a]" />
+              <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#683520]" />
             )}
           </Link>
 
@@ -140,9 +130,9 @@ const Navbar = () => {
             to="/search?sort=newest"
             className={navClass(location.search.includes("sort=newest"), true)}
           >
-            Mới Nhất
+            Mới nhất
             {location.search.includes("sort=newest") && (
-              <span className="absolute bottom-0 left-0 h-[3px] w-full rounded-full bg-[#5a7247]" />
+              <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#683520]" />
             )}
           </Link>
         </div>
