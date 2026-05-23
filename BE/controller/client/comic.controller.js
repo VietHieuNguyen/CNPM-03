@@ -104,10 +104,23 @@ module.exports.newComics = async (req, res) => {
 // GET /api/v1/comics/bestseller
 module.exports.bestseller = async (req, res) => {
   try {
-    const comics = await Comic.find({ isBestSeller: true, status: "active" })
+    const comics = await Comic.find({ status: "active" })
       .populate("category", "name slug")
       .sort({ sold: -1 })
-      .limit(8)
+      .limit(10)
+    return res.status(200).json({ success: true, data: { comics } })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
+  }
+}
+
+// GET /api/v1/comics/most-viewed
+module.exports.mostViewed = async (req, res) => {
+  try {
+    const comics = await Comic.find({ status: "active" })
+      .populate("category", "name slug")
+      .sort({ views: -1 })
+      .limit(10)
     return res.status(200).json({ success: true, data: { comics } })
   } catch (error) {
     return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
@@ -135,10 +148,12 @@ module.exports.similar = async (req, res) => {
 // GET /api/v1/comics/:slug — chi tiết
 module.exports.detail = async (req, res) => {
   try {
-    const comic = await Comic.findOne({ slug: req.params.slug, status: "active" }).populate(
-      "category",
-      "name slug"
-    )
+    const comic = await Comic.findOneAndUpdate(
+      { slug: req.params.slug, status: "active" },
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("category", "name slug")
+    
     if (!comic) {
       return res.status(404).json({ success: false, message: "Không tìm thấy truyện." })
     }

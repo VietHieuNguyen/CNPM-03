@@ -55,7 +55,16 @@ const SearchPage = () => {
       params.limit = 12
 
       const res = await comicsAPI.list(params)
-      setComics(res.data.data.comics)
+      if (filters.page === 1) {
+        setComics(res.data.data.comics)
+      } else {
+        setComics(prev => {
+          // Prevent duplicates by checking if the comic ID already exists
+          const existingIds = new Set(prev.map(c => c._id))
+          const newComics = res.data.data.comics.filter(c => !existingIds.has(c._id))
+          return [...prev, ...newComics]
+        })
+      }
       setPagination(res.data.data.pagination)
       setSearchParams(params)
     } catch (err) {
@@ -63,9 +72,29 @@ const SearchPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, [filters.keyword, filters.category, filters.minPrice, filters.maxPrice, filters.tags, filters.status, filters.sort, filters.page])
 
   useEffect(() => { fetchComics() }, [fetchComics])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && filters.page < pagination.totalPages) {
+          setFilters(prev => ({ ...prev, page: prev.page + 1 }))
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    )
+
+    const sentinel = document.getElementById('infinite-scroll-sentinel')
+    if (sentinel) {
+      observer.observe(sentinel)
+    }
+
+    return () => {
+      if (sentinel) observer.unobserve(sentinel)
+    }
+  }, [loading, filters.page, pagination.totalPages])
 
   const updateFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }))
@@ -263,7 +292,7 @@ const SearchPage = () => {
 
         {/* Results */}
         <div className="flex-1">
-          {loading ? (
+          {loading && filters.page === 1 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {Array(12).fill(0).map((_, i) => (
                 <div key={i} className="comic-card">
@@ -281,45 +310,24 @@ const SearchPage = () => {
                 {comics.map(comic => <ComicCard key={comic._id} comic={comic} />)}
               </div>
 
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8" id="search-pagination">
-                  <button
-                    onClick={() => updateFilter('page', Math.max(1, filters.page - 1))}
-                    disabled={filters.page <= 1}
-                    className="border-2 border-[#d9cbb8] text-[#6b5744] p-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer font-bold text-sm rounded-lg"
-                    id="pagination-prev"
+              {/* Sentinel for infinite scroll */}
+              <div id="infinite-scroll-sentinel" className="w-full flex flex-col items-center justify-center mt-10 py-6 border-t border-[#d9cbb8]/30">
+                {loading ? (
+                  <div className="flex items-center gap-2 text-[#b5503a] text-sm font-semibold animate-pulse">
+                    <div className="w-5 h-5 border-2 border-t-transparent border-[#b5503a] rounded-full animate-spin" />
+                    Đang tải thêm truyện...
+                  </div>
+                ) : filters.page < pagination.totalPages ? (
+                  <button 
+                    onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
+                    className="px-6 py-2.5 border-2 border-[#d9cbb8] text-[#6b5744] hover:text-[#b5503a] hover:border-[#b5503a] transition-all duration-300 rounded-[10px] text-xs font-bold cursor-pointer bg-white shadow-sm"
                   >
-                    ←
+                    Tải thêm truyện
                   </button>
-
-                  {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => {
-                    const p = i + 1
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => updateFilter('page', p)}
-                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                          filters.page === p
-                            ? 'bg-[#b5503a] text-white shadow-warm'
-                            : 'bg-white border border-[#d9cbb8] text-[#6b5744] hover:text-[#b5503a] hover:border-[#b5503a]/30'
-                        }`}
-                        id={`pagination-page-${p}`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  })}
-
-                  <button
-                    onClick={() => updateFilter('page', Math.min(pagination.totalPages, filters.page + 1))}
-                    disabled={filters.page >= pagination.totalPages}
-                    className="border-2 border-[#d9cbb8] text-[#6b5744] p-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer font-bold text-sm rounded-lg"
-                    id="pagination-next"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
+                ) : (
+                  <p className="text-wabi-muted text-xs font-semibold font-serif">Đã hiển thị toàn bộ truyện theo bộ lọc</p>
+                )}
+              </div>
             </>
           ) : (
             <div className="text-center py-20">

@@ -215,7 +215,7 @@ body {
 
 /* Comic Card */
 .comic-card {
-  background: var(--bg-card);
+  background: #FEFEFE;
   border: 1px solid var(--border-light);
   border-radius: 14px;
   overflow: hidden;

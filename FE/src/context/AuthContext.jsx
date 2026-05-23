@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       console.error(err)
     }
     setUser(null)
-    toast.success('Đã đăng xuất. Hẹn gặp lại! 👋')
+    toast.success('Đã đăng xuất. Hẹn gặp lại! ')
   }
 
   return (

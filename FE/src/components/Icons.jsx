@@ -12,6 +12,7 @@ export const IconLogout = ({ className }) => <Icon className={className} viewBox
 export const IconMenu = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M3 12h18', 'M3 6h18', 'M3 18h18']} />
 export const IconClose = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M18 6L6 18', 'M6 6l12 12']} />
 export const IconChevronRight = ({ className }) => <Icon className={className} viewBox="0 0 320 512" d="M285.5 261.6l-192 160c-9.1 7.6-22.7 6.4-30.3-2.7s-6.4-22.7 2.7-30.3L226.7 256 65.9 123.4c-9.1-7.6-10.3-21.2-2.7-30.3s21.2-10.3 30.3-2.7l192 160c5 4.2 7.9 10.4 7.9 16.9s-2.9 12.7-7.9 16.9z" />
+export const IconChevronLeft = ({ className }) => <Icon className={className} viewBox="0 0 320 512" d="M34.5 250.4l192-160c9.1-7.6 22.7-6.4 30.3 2.7s6.4 22.7-2.7 30.3L93.3 256l160.8 132.6c9.1 7.6 10.3 21.2 2.7 30.3s-21.2 10.3-30.3 2.7l-192-160C29.5 257.4 26.6 251.2 26.6 244.7s2.9-12.7 7.9-16.9z" />
 
 // --- Section icons ---
 export const IconFolder = ({ className }) => <Icon className={className} d="M464 128H272l-64-64H48C21.5 64 0 85.5 0 112v288c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V176c0-26.5-21.5-48-48-48z" />
@@ -40,3 +41,6 @@ export const IconX = ({ className = 'w-3 h-3' }) => (
     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 )
+
+export const IconCart = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6']} />
+export const IconHistory = ({ className }) => <Icon className={className} viewBox="0 0 24 24" fill={false} d={['M12 8v4l3 3m6-3a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.7L21 8M21 3v5h-5']} />

@@ -1,86 +1,144 @@
 import { Link } from 'react-router-dom'
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
+  new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(price)
 
 const ComicCard = ({ comic }) => {
   if (!comic) return null
 
-  const finalPrice = comic.price * (1 - (comic.discount || 0) / 100)
-  const coverImg = comic.images?.[0] || 'https://placehold.co/300x420/e8ddd1/3d2b1a?text=No+Image'
+  const finalPrice =
+    comic.price * (1 - (comic.discount || 0) / 100)
+
+  const coverImg =
+    comic.images?.[0] ||
+    'https://placehold.co/300x420/e8ddd1/3d2b1a?text=No+Image'
+
   const isOutOfStock = comic.stock === 0
 
   return (
-    <Link to={`/comics/${comic.slug}`} className="block group" id={`comic-card-${comic._id}`}>
-      <div className="comic-card h-full flex flex-col">
-        {/* Image */}
+    <Link
+      to={`/comics/${comic.slug}`}
+      className="group block"
+      id={`comic-card-${comic._id}`}
+    >
+      <div className="overflow-hidden rounded-3xl border border-wabi-border/60 bg-white shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
+        
+        {/* IMAGE */}
         <div className="relative overflow-hidden">
           <img
             src={coverImg}
             alt={comic.title}
-            className="card-img"
             loading="lazy"
-            onError={(e) => { e.target.src = 'https://placehold.co/300x420/e8ddd1/3d2b1a?text=No+Image' }}
+            onError={(e) => {
+              e.target.src =
+                'https://placehold.co/300x420/e8ddd1/3d2b1a?text=No+Image'
+            }}
+            className="h-[340px] w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
 
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {comic.isNew && <span className="badge badge-new">Mới</span>}
-            {comic.isBestSeller && <span className="badge badge-hot">Hot</span>}
-            {comic.discount > 0 && <span className="badge badge-sale">-{comic.discount}%</span>}
-            {isOutOfStock && <span className="badge badge-out">Hết hàng</span>}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+          {/* BADGES */}
+          <div className="absolute left-3 top-3 flex flex-col gap-2">
+            {comic.isNew && (
+              <span className="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                MỚI
+              </span>
+            )}
+
+            {comic.isBestSeller && (
+              <span className="rounded-full bg-orange-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                HOT
+              </span>
+            )}
+
+            {comic.discount > 0 && (
+              <span className="rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                -{comic.discount}%
+              </span>
+            )}
+
+            {isOutOfStock && (
+              <span className="rounded-full bg-gray-800 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                HẾT HÀNG
+              </span>
+            )}
           </div>
 
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#3d2b1a]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-            <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+          {/* Hover action */}
+          <div className="absolute bottom-4 left-4 right-4 translate-y-5 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+            <div className="flex items-center justify-center rounded-xl bg-white/90 py-2 text-sm font-semibold text-wabi-brown backdrop-blur-md">
               Xem chi tiết →
-            </span>
+            </div>
           </div>
         </div>
 
-        {/* Info */}
-        <div className="p-3 flex-1 flex flex-col gap-1.5">
-          <p className="text-wabi-muted text-xs truncate">{comic.author}</p>
-          <h3 className="text-wabi-text font-bold text-sm line-clamp-2 leading-snug group-hover:text-wabi-red transition-colors">
+        {/* CONTENT */}
+        <div className="flex flex-col p-4">
+          
+          {/* AUTHOR */}
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-wabi-muted">
+            {comic.author}
+          </p>
+
+          {/* TITLE */}
+          <h3 className="line-clamp-2 min-h-[52px] text-[16px] font-extrabold leading-snug text-wabi-text transition-colors duration-300 group-hover:text-wabi-red">
             {comic.title}
           </h3>
 
-          {comic.category && (
-            <span className="text-xs text-wabi-green font-medium">{comic.category.name}</span>
-          )}
-
-          {comic.rating?.avg > 0 && (
-            <div className="flex items-center gap-1">
-              <svg className="w-[11px] h-[11px] text-wabi-gold fill-wabi-gold inline-block" viewBox="0 0 24 24">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-              <span className="text-xs text-wabi-muted">{comic.rating.avg.toFixed(1)}</span>
-            </div>
-          )}
-
-          {/* Price */}
-          <div className="mt-auto pt-1">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-wabi-red text-sm">
-                {formatPrice(finalPrice)}
+          {/* CATEGORY + RATING */}
+          <div className="mt-3 flex items-center gap-2">
+            {comic.category && (
+              <span className="rounded-lg bg-wabi-green/10 px-2.5 py-1 text-[11px] font-bold text-wabi-green">
+                {comic.category.name}
               </span>
-              {comic.discount > 0 && (
-                <span className="text-wabi-muted text-xs line-through">
-                  {formatPrice(comic.price)}
-                </span>
-              )}
-            </div>
-            {comic.sold > 0 && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <svg className="w-[10px] h-[10px] text-wabi-muted inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                  <line x1="12" y1="22.08" x2="12" y2="12" />
+            )}
+
+            {comic.rating?.avg > 0 && (
+              <div className="ml-auto flex items-center gap-1 rounded-lg bg-yellow-100 px-2 py-1">
+                <svg
+                  className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                 </svg>
-                <span className="text-wabi-muted text-xs">Đã bán: {comic.sold.toLocaleString()}</span>
+
+                <span className="text-[11px] font-bold text-yellow-700">
+                  {comic.rating.avg.toFixed(1)}
+                </span>
               </div>
             )}
+          </div>
+
+          {/* PRICE */}
+          <div className="mt-5 border-t border-wabi-border/50 pt-4">
+            <div className="flex items-end justify-between">
+              
+              <div className="flex flex-col">
+                {comic.discount > 0 && (
+                  <span className="text-[12px] text-gray-400 line-through">
+                    {formatPrice(comic.price)}
+                  </span>
+                )}
+
+                <span className="text-[20px] font-black tracking-tight text-wabi-red">
+                  {formatPrice(finalPrice)}
+                </span>
+              </div>
+
+              {comic.sold > 0 && (
+                <div className="rounded-xl bg-[#f8f5f1] px-3 py-2 text-[11px] font-semibold text-wabi-brown">
+                  Đã bán{' '}
+                  {comic.sold >= 1000
+                    ? (comic.sold / 1000).toFixed(1) + 'k'
+                    : comic.sold}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

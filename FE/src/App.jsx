@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
@@ -9,6 +10,9 @@ import RegisterPage from './pages/RegisterPage'
 import ComicDetailPage from './pages/ComicDetailPage'
 import SearchPage from './pages/SearchPage'
 import ProfilePage from './pages/ProfilePage'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrderTrackingPage from './pages/OrderTrackingPage'
 import { IconMap } from './components/Icons'
 
 // Protected route wrapper
@@ -48,6 +52,9 @@ const AppRoutes = () => (
         <Route path="/comics/:slug" element={<ComicDetailPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} />
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center min-h-96 gap-4">
             <IconMap className="w-16 h-16 text-[#9a8672]" />
@@ -65,23 +72,25 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#faf8f5',
-              color: '#3d2b1a',
-              border: '1px solid #d9cbb8',
-              boxShadow: '0 4px 20px rgba(61, 43, 26, 0.12)',
-              fontFamily: "'Be Vietnam Pro', sans-serif",
-              fontWeight: '600',
-            },
-            success: { iconTheme: { primary: '#5a7247', secondary: '#fff' } },
-            error: { iconTheme: { primary: '#b5503a', secondary: '#fff' } },
-          }}
-        />
+        <CartProvider>
+          <AppRoutes />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#faf8f5',
+                color: '#3d2b1a',
+                border: '1px solid #d9cbb8',
+                boxShadow: '0 4px 20px rgba(61, 43, 26, 0.12)',
+                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontWeight: '600',
+              },
+              success: { iconTheme: { primary: '#5a7247', secondary: '#fff' } },
+              error: { iconTheme: { primary: '#b5503a', secondary: '#fff' } },
+            }}
+          />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   )

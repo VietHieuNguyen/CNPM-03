@@ -44,6 +44,11 @@ const comicSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    views: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     images: {
       type: [String],
       default: [],

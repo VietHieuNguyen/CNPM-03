@@ -9,71 +9,329 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
     if (!email || !password) {
       toast.error('Vui lòng điền đầy đủ thông tin')
       return
     }
+
     setLoading(true)
+
     try {
       await login(email, password)
+
+      toast.success('Đăng nhập thành công!')
+
       navigate('/')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng nhập thất bại')
+      toast.error(
+        err.response?.data?.message || 'Đăng nhập thất bại'
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-md animate-fade-up">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-wabi-red to-wabi-brown flex items-center justify-center shadow-warm-lg animate-float">
-              <IconBook className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-            </div>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-wabi-text">MangaStore</h1>
-          <p className="text-wabi-muted mt-2 text-sm">Đăng nhập để khám phá kho truyện tranh</p>
-        </div>
-
-        <div className="paper-old p-6 sm:p-8">
-          <h2 className="text-lg sm:text-xl font-bold text-wabi-text mb-5 sm:mb-6 font-serif flex items-center gap-2">
-            <svg className="w-4 h-4 text-wabi-red" viewBox="0 0 512 512" fill="currentColor"><path d="M217.9 256L345 129c9.4-9.4 9.4-24.6 0-33.9-9.4-9.4-24.6-9.4-33.9 0L167 239c-9.1 9.1-9.3 23.7-.7 33.1L310.9 417c4.7 4.7 10.9 7 17 7s12.3-2.3 17-7c9.4-9.4 9.4-24.6 0-33.9L217.9 256z"/></svg>
-            Đăng Nhập
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen bg-[#fcfaf7]">
+      <div className="
+w-full
+min-h-screen
+grid
+grid-cols-1
+lg:grid-cols-[1.1fr_0.9fr]
+overflow-hidden
+bg-white
+">
+        
+        {/* LEFT */}
+        <div className="
+relative
+hidden
+lg:flex
+overflow-hidden
+bg-gradient-to-br
+from-[#f8efe5]
+via-[#fdf8f3]
+to-[#f5e7d7]
+px-16
+py-14
+">
+          
+          <div className="relative z-10 flex flex-col justify-between">
+            
             <div>
-              <label className="block text-sm font-semibold text-wabi-secondary mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="input-wabi" id="login-email" autoComplete="email" />
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#b5503a] shadow-lg">
+                  <IconBook className="h-7 w-7 text-white" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#8f7b68]">
+                    Welcome to
+                  </p>
+
+                  <h1 className="text-2xl font-black tracking-tight text-[#3d2b1a]">
+                    MangaStore
+                  </h1>
+                </div>
+              </div>
+
+              <h2 className="max-w-md text-5xl font-black leading-[1.1] tracking-tight text-[#3d2b1a]">
+                Khám phá
+                <span className="block text-[#b5503a]">
+                  thế giới manga
+                </span>
+              </h2>
+
+              <p className="mt-6 max-w-lg text-[15px] leading-8 text-[#6b5744]">
+                Hàng nghìn đầu truyện manga, manhwa và light novel chất lượng cao.
+                Giao diện hiện đại, trải nghiệm đọc và mua truyện tốt nhất.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-wabi-secondary mb-1.5">Mật khẩu</label>
-              <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="input-wabi pr-14" id="login-password" autoComplete="current-password" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-wabi-muted hover:text-wabi-red transition-colors cursor-pointer select-none">
-                  {showPassword ? 'Ẩn' : 'Hiện'}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-white/50 bg-white/70 p-5 backdrop-blur-sm">
+                <p className="text-3xl font-black text-[#b5503a]">
+                  10k+
+                </p>
+                <p className="mt-1 text-sm text-[#7a6755]">
+                  Đầu truyện
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/50 bg-white/70 p-5 backdrop-blur-sm">
+                <p className="text-3xl font-black text-[#5a7247]">
+                  24/7
+                </p>
+                <p className="mt-1 text-sm text-[#7a6755]">
+                  Cập nhật liên tục
+                </p>
               </div>
             </div>
+          </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer" id="login-submit-btn">
-              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Đăng Nhập'}
-            </button>
-          </form>
+          {/* DECOR */}
+          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#b5503a]/10 blur-3xl" />
+          <div className="absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-[#5a7247]/10 blur-3xl" />
+        </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-wabi-muted text-sm">
-              Chưa có tài khoản?{' '}
-              <Link to="/register" className="text-wabi-red font-bold hover:underline" id="login-to-register-link">Đăng ký ngay</Link>
-            </p>
+        {/* RIGHT */}
+        <div className="
+flex
+w-full
+items-center
+justify-center
+px-6
+py-10
+sm:px-10
+lg:px-16
+xl:px-24
+bg-white
+">
+          
+          <div className="w-full max-w-md">
+            
+            {/* MOBILE LOGO */}
+            <div className="mb-8 text-center lg:hidden">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#b5503a] to-[#8e3f2d] shadow-lg">
+                <IconBook className="h-8 w-8 text-white" />
+              </div>
+
+              <h1 className="text-3xl font-black tracking-tight text-[#3d2b1a]">
+                MangaStore
+              </h1>
+
+              <p className="mt-2 text-sm text-[#8f7b68]">
+                Đăng nhập để tiếp tục
+              </p>
+            </div>
+
+            {/* HEADER */}
+            <div className="mb-8">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-[#b5503a]">
+                Welcome Back
+              </p>
+
+              <h2 className="text-4xl font-black tracking-tight text-[#3d2b1a]">
+                Đăng nhập
+              </h2>
+
+              <p className="mt-3 text-[15px] leading-7 text-[#7a6755]">
+                Tiếp tục hành trình khám phá thế giới truyện tranh của bạn.
+              </p>
+            </div>
+
+            {/* FORM */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
+              {/* EMAIL */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#4d3b2b]">
+                  Email
+                </label>
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@example.com"
+                  autoComplete="email"
+                  id="login-email"
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-[#e5d9cb]
+                    bg-[#fcfaf8]
+                    px-4
+                    text-[15px]
+                    text-[#3d2b1a]
+                    outline-none
+                    transition-all
+                    duration-300
+                    placeholder:text-[#b0a08f]
+                    focus:border-[#b5503a]
+                    focus:bg-white
+                    focus:ring-4
+                    focus:ring-[#b5503a]/10
+                  "
+                />
+              </div>
+
+              {/* PASSWORD */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#4d3b2b]">
+                  Mật khẩu
+                </label>
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    id="login-password"
+                    className="
+                      h-14
+                      w-full
+                      rounded-2xl
+                      border
+                      border-[#e5d9cb]
+                      bg-[#fcfaf8]
+                      px-4
+                      pr-16
+                      text-[15px]
+                      text-[#3d2b1a]
+                      outline-none
+                      transition-all
+                      duration-300
+                      placeholder:text-[#b0a08f]
+                      focus:border-[#b5503a]
+                      focus:bg-white
+                      focus:ring-4
+                      focus:ring-[#b5503a]/10
+                    "
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
+                    className="
+                      absolute
+                      right-4
+                      top-1/2
+                      -translate-y-1/2
+                      text-sm
+                      font-bold
+                      text-[#8f7b68]
+                      transition-colors
+                      hover:text-[#b5503a]
+                    "
+                  >
+                    {showPassword ? 'Ẩn' : 'Hiện'}
+                  </button>
+                </div>
+              </div>
+
+              {/* REMEMBER */}
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 text-sm text-[#7a6755]">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-[#d8cab9]"
+                  />
+                  Ghi nhớ đăng nhập
+                </label>
+
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-[#b5503a] hover:underline"
+                >
+                  Quên mật khẩu?
+                </button>
+              </div>
+
+              {/* BUTTON */}
+              <button
+                type="submit"
+                disabled={loading}
+                id="login-submit-btn"
+                className="
+                  flex
+                  h-14
+                  w-full
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-[#b5503a]
+                  text-[15px]
+                  font-bold
+                  text-white
+                  shadow-lg
+                  shadow-[#b5503a]/20
+                  transition-all
+                  duration-300
+                  hover:-translate-y-0.5
+                  hover:bg-[#a34531]
+                  hover:shadow-xl
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                {loading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  'Đăng Nhập'
+                )}
+              </button>
+            </form>
+
+            {/* FOOTER */}
+            <div className="mt-8 border-t border-[#eee4d8] pt-6 text-center">
+              <p className="text-sm text-[#7a6755]">
+                Chưa có tài khoản?{' '}
+                <Link
+                  to="/register"
+                  id="login-to-register-link"
+                  className="font-bold text-[#b5503a] hover:underline"
+                >
+                  Đăng ký ngay
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
