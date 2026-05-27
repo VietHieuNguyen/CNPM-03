@@ -5,6 +5,7 @@ const express = require("express")
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
 const connectDB = require("./config/database")
+const { globalLimiter } = require("./middlewares/rateLimit.middleware")
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -17,6 +18,7 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
+app.use("/api", globalLimiter)
 
 // Routes
 const clientRoutes = require("./routes/client/index.routes")

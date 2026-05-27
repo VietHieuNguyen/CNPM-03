@@ -38,27 +38,180 @@ module.exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ thông tin." })
     }
 
-    const existUser = await User.findOne({ email })
-    if (existUser) {
-      return res.status(409).json({ success: false, message: "Email đã được sử dụng." })
+    // Validation
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "Định dạng Email không hợp lệ." })
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Mật khẩu phải chứa ít nhất 6 ký tự." })
     }
 
+    const existUser = await User.findOne({ email })
+    
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiration
     const hashedPassword = await bcrypt.hash(password, 12)
-    const user = await User.create({ name, email, password: hashedPassword })
 
+    if (existUser) {
+      if (existUser.isActive) {
+        return res.status(409).json({ success: false, message: "Email đã được sử dụng." })
+      }
+      // User created but not active, update and resend OTP
+      existUser.name = name
+      existUser.password = hashedPassword
+      existUser.otp = otp
+      existUser.otpExpires = otpExpires
+      await existUser.save()
+    } else {
+      // Create new inactive user
+      await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        isActive: false,
+        otp,
+        otpExpires
+      })
+    }
+
+    // Send email with register OTP
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <h2 style="color: #6C3D2F; text-align: center;">Mã xác thực đăng ký tài khoản</h2>
+        <p>Chào bạn,</p>
+        <p>Cảm ơn bạn đã đăng ký tài khoản tại Komorebi Manga Store. Dưới đây là mã xác thực OTP đăng ký của bạn:</p>
+        <div style="background-color: #f7f7f7; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #6C3D2F; border-radius: 4px; margin: 20px 0;">
+          ${otp}
+        </div>
+        <p style="color: #666; font-size: 13px;">Mã xác thực này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px; text-align: center;">Komorebi Manga Store &copy; 2026</p>
+      </div>
+    `
+
+    const mailRes = await sendEmail({
+      to: email,
+      subject: "Komorebi Manga Store - Xác thực tài khoản đăng ký",
+      html: emailHtml
+    })
+
+    if (!mailRes.success) {
+      return res.status(500).json({ success: false, message: "Không thể gửi email OTP. Vui lòng thử lại sau." })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Mã OTP xác thực đã được gửi đến email của bạn.",
+      needsVerification: true,
+      email
+    })
+  } catch (error) {
+    console.error("Register error:", error)
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
+  }
+}
+
+// POST /api/v1/user/verify-otp-register
+module.exports.verifyRegisterOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Vui lòng nhập đầy đủ thông tin xác thực." })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản." })
+    }
+
+    if (user.isActive) {
+      return res.status(400).json({ success: false, message: "Tài khoản đã được xác thực trước đó." })
+    }
+
+    if (!user.otp || user.otp !== otp || !user.otpExpires || user.otpExpires < new Date()) {
+      return res.status(400).json({ success: false, message: "Mã OTP không chính xác hoặc đã hết hạn." })
+    }
+
+    user.isActive = true
+    user.otp = null
+    user.otpExpires = null
+    
     const { accessToken, refreshToken } = generateTokens(user._id)
-    await User.findByIdAndUpdate(user._id, { refreshToken })
+    user.refreshToken = refreshToken
+    await user.save()
+
     setCookies(res, accessToken, refreshToken)
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "Đăng ký thành công!",
+      message: "Xác thực tài khoản thành công!",
       data: {
         user: { _id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
       },
     })
   } catch (error) {
-    console.error("Register error:", error)
+    console.error("Verify register OTP error:", error)
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
+  }
+}
+
+// POST /api/v1/user/resend-otp-register
+module.exports.resendRegisterOtp = async (req, res) => {
+  try {
+    const { email } = req.body
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Vui lòng cung cấp email." })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản." })
+    }
+
+    if (user.isActive) {
+      return res.status(400).json({ success: false, message: "Tài khoản đã được xác thực trước đó." })
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000)
+
+    user.otp = otp
+    user.otpExpires = otpExpires
+    await user.save()
+
+    // Send email
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <h2 style="color: #6C3D2F; text-align: center;">Mã xác thực đăng ký tài khoản</h2>
+        <p>Chào bạn,</p>
+        <p>Cảm ơn bạn đã đăng ký tài khoản tại Komorebi Manga Store. Dưới đây là mã xác thực OTP đăng ký của bạn:</p>
+        <div style="background-color: #f7f7f7; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #6C3D2F; border-radius: 4px; margin: 20px 0;">
+          ${otp}
+        </div>
+        <p style="color: #666; font-size: 13px;">Mã xác thực này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px; text-align: center;">Komorebi Manga Store &copy; 2026</p>
+      </div>
+    `
+
+    const mailRes = await sendEmail({
+      to: email,
+      subject: "Komorebi Manga Store - Xác thực tài khoản đăng ký",
+      html: emailHtml
+    })
+
+    if (!mailRes.success) {
+      return res.status(500).json({ success: false, message: "Không thể gửi email OTP. Vui lòng thử lại sau." })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Mã OTP mới đã được gửi đến email của bạn."
+    })
+  } catch (error) {
+    console.error("Resend register OTP error:", error)
     return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
   }
 }

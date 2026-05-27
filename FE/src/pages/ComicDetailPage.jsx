@@ -6,6 +6,13 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import ComicCard, { formatPrice } from "../components/ComicCard";
 
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 const ComicDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -16,9 +23,6 @@ const ComicDetailPage = () => {
   const [similarComics, setSimilarComics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Carousel Cover Image state
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   
   // Purchase quantity state
   const [quantity, setQuantity] = useState(1);
@@ -39,7 +43,6 @@ const ComicDetailPage = () => {
         if (res.success && res.data.comic) {
           const fetchedComic = res.data.comic;
           setComic(fetchedComic);
-          setActiveImageIndex(0);
           setQuantity(1);
 
           // Fetch similar comics based on category
@@ -109,13 +112,7 @@ const ComicDetailPage = () => {
     "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80"
   ];
 
-  const handlePrevImage = () => {
-    setActiveImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
-  };
 
-  const handleNextImage = () => {
-    setActiveImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
-  };
 
   const adjustQuantity = (amount) => {
     const nextQty = quantity + amount;
@@ -183,28 +180,20 @@ const ComicDetailPage = () => {
         {/* Left pane: Slider cover image */}
         <div className="product-images-pane">
           <div className="detail-slider-container">
-            <button className="slider-nav-btn prev" onClick={handlePrevImage}>
-              <ChevronLeft size={20} />
-            </button>
-            
-            <img src={displayImages[activeImageIndex]} alt={title} className="detail-main-img" />
-            
-            <button className="slider-nav-btn next" onClick={handleNextImage}>
-              <ChevronRight size={20} />
-            </button>
-
-            {/* Dots */}
-            {displayImages.length > 1 && (
-              <div className="slider-dots">
-                {displayImages.map((_, idx) => (
-                  <button
-                    key={idx}
-                    className={`slider-dot ${idx === activeImageIndex ? "active" : ""}`}
-                    onClick={() => setActiveImageIndex(idx)}
-                  ></button>
-                ))}
-              </div>
-            )}
+            <Swiper
+              modules={[Navigation, Pagination]}
+              navigation={displayImages.length > 1}
+              pagination={displayImages.length > 1 ? { clickable: true } : false}
+              spaceBetween={0}
+              slidesPerView={1}
+              style={{ width: "100%", height: "100%" }}
+            >
+              {displayImages.map((img, idx) => (
+                <SwiperSlide key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={img} alt={`${title} - ${idx + 1}`} className="detail-main-img" />
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
 
           <div className="detail-tags-badges">
@@ -439,6 +428,7 @@ const ComicDetailPage = () => {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          min-width: 0;
         }
         .detail-slider-container {
           position: relative;
@@ -447,56 +437,58 @@ const ComicDetailPage = () => {
           background-color: var(--bg-secondary);
           box-shadow: var(--shadow-sm);
           overflow: hidden;
+          width: 100%;
+        }
+        .detail-slider-container .swiper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+        .detail-slider-container .swiper-slide {
           display: flex;
           align-items: center;
           justify-content: center;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
         }
         .detail-main-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: var(--transition);
+          display: block;
         }
-        .slider-nav-btn {
-          position: absolute;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background-color: rgba(250, 246, 240, 0.85);
+        /* Swiper custom overrides */
+        .detail-slider-container .swiper-button-next,
+        .detail-slider-container .swiper-button-prev {
+          color: var(--color-accent) !important;
+          background: rgba(250, 246, 240, 0.9);
           border: 1px solid var(--border-color);
-          color: var(--color-text-main);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 2;
-          box-shadow: var(--shadow-sm);
-        }
-        .slider-nav-btn:hover {
-          background-color: var(--color-accent);
-          color: white;
-        }
-        .slider-nav-btn.prev {
-          left: 16px;
-        }
-        .slider-nav-btn.next {
-          right: 16px;
-        }
-        .slider-dots {
-          position: absolute;
-          bottom: 16px;
-          display: flex;
-          gap: 8px;
-          z-index: 2;
-        }
-        .slider-dot {
-          width: 8px;
-          height: 8px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background-color: rgba(108, 61, 47, 0.3);
-          border: none;
+          box-shadow: var(--shadow-sm);
+          transition: var(--transition);
+          margin-top: -14px !important;
         }
-        .slider-dot.active {
-          background-color: var(--color-accent);
+        .detail-slider-container .swiper-button-next:hover,
+        .detail-slider-container .swiper-button-prev:hover {
+          background: var(--color-accent);
+          color: white !important;
+        }
+        .detail-slider-container .swiper-button-next:after,
+        .detail-slider-container .swiper-button-prev:after {
+          font-size: 10px !important;
+          font-weight: bold;
+        }
+        .detail-slider-container .swiper-pagination-bullet {
+          background-color: rgba(108, 61, 47, 0.4) !important;
+          opacity: 1;
+        }
+        .detail-slider-container .swiper-pagination-bullet-active {
+          background-color: var(--color-accent) !important;
           width: 16px;
           border-radius: 4px;
         }

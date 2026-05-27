@@ -665,19 +665,18 @@ const AdminDashboardPage = () => {
                   <p className="upload-tip">Ảnh đầu tiên sẽ được lấy làm ảnh bìa sản phẩm.</p>
                 </div>
 
-                <div className="form-submit-row-admin" style={{ marginTop: "40px" }}>
+                <div className="form-submit-row-admin">
                   <button
                     type="submit"
-                    className="place-order-cta-btn"
+                    className="btn-submit-admin"
                     disabled={submitting}
                   >
-                    {submitting ? "Đang xử lý..." : (editingId ? "Cập nhật sản phẩm" : "Thêm mới sản phẩm")}
+                    {submitting ? "Đang xử lý..." : (editingId ? "Lưu thay đổi" : "Thêm mới sản phẩm")}
                   </button>
                   <button
                     type="button"
-                    className="btn-secondary"
+                    className="btn-cancel-admin"
                     onClick={() => setShowForm(false)}
-                    style={{ width: "100%" }}
                   >
                     Hủy bỏ
                   </button>
@@ -930,6 +929,47 @@ const AdminDashboardPage = () => {
         .checkboxes-row-admin {
           display: flex;
           gap: 24px;
+        }
+
+        .form-submit-row-admin {
+          display: flex;
+          gap: 16px;
+          margin-top: 36px;
+        }
+        .form-submit-row-admin button {
+          flex: 1;
+          padding: 14px 24px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: var(--transition);
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .btn-submit-admin {
+          background-color: var(--color-accent);
+          color: white;
+        }
+        .btn-submit-admin:hover {
+          background-color: #8b3c25;
+        }
+        .btn-submit-admin:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .btn-cancel-admin {
+          background-color: transparent;
+          border: 1px solid var(--border-color-dark) !important;
+          color: var(--color-text-muted);
+        }
+        .btn-cancel-admin:hover {
+          border-color: var(--color-text-main) !important;
+          color: var(--color-text-main);
+          background-color: rgba(0, 0, 0, 0.02);
         }
 
         .image-management-box {

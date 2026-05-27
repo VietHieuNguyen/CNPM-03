@@ -46,8 +46,13 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const res = await authAPI.register(name, email, password);
-      if (res.success && res.data.user) {
-        setUser(res.data.user);
+      if (res.success) {
+        if (res.needsVerification) {
+          return { success: true, needsVerification: true, email: res.email, message: res.message };
+        }
+        if (res.data?.user) {
+          setUser(res.data.user);
+        }
         return { success: true };
       }
       return { success: false, message: res.message || "Đăng ký thất bại" };

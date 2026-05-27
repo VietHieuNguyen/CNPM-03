@@ -61,6 +61,14 @@ export const authAPI = {
     const response = await apiClient.post("/user/reset-password", { email, otp, newPassword });
     return response.data;
   },
+  verifyOtpRegister: async (email, otp) => {
+    const response = await apiClient.post("/user/verify-otp-register", { email, otp });
+    return response.data;
+  },
+  resendOtpRegister: async (email) => {
+    const response = await apiClient.post("/user/resend-otp-register", { email });
+    return response.data;
+  },
   getAddresses: async () => {
     const response = await apiClient.get("/user/addresses");
     return response.data;
