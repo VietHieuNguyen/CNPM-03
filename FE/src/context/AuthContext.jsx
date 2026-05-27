@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.login(email, password);
       if (res.success && res.data.user) {
         setUser(res.data.user);
-        return { success: true };
+        return { success: true, data: res.data };
       }
       return { success: false, message: res.message || "Đăng nhập thất bại" };
     } catch (err) {

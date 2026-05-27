@@ -205,6 +205,38 @@ export const adminAPI = {
     const response = await apiClient.get("/admin/categories");
     return response.data;
   },
+  getOrders: async (params) => {
+    const response = await apiClient.get("/admin/orders", { params });
+    return response.data;
+  },
+  getOrderDetail: async (id) => {
+    const response = await apiClient.get(`/admin/orders/${id}`);
+    return response.data;
+  },
+  updateOrderStatus: async (id, status) => {
+    const response = await apiClient.patch(`/admin/orders/${id}/status`, { status });
+    return response.data;
+  },
+  updateOrderPaymentStatus: async (id, paymentStatus) => {
+    const response = await apiClient.patch(`/admin/orders/${id}/payment`, { paymentStatus });
+    return response.data;
+  },
+  getUsers: async (params) => {
+    const response = await apiClient.get("/admin/users", { params });
+    return response.data;
+  },
+  createUser: async (userData) => {
+    const response = await apiClient.post("/admin/users", userData);
+    return response.data;
+  },
+  updateUser: async (id, userData) => {
+    const response = await apiClient.put(`/admin/users/${id}`, userData);
+    return response.data;
+  },
+  deleteUser: async (id) => {
+    const response = await apiClient.delete(`/admin/users/${id}`);
+    return response.data;
+  },
 };
 
 export default apiClient;

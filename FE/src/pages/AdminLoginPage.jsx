@@ -14,15 +14,10 @@ const AdminLoginPage = () => {
 
   // Redirect if already logged in as Admin
   useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        // If logged in as member, log out so we can log in as Admin
-        logout();
-      }
+    if (user && user.role === "admin") {
+      navigate("/admin");
     }
-  }, [user, navigate, logout]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,14 +30,17 @@ const AdminLoginPage = () => {
     setErrorMsg("");
 
     try {
+      // If currently logged in as a member, logout first
+      if (user && user.role !== "admin") {
+        await logout();
+      }
+
       const res = await login(email, password);
       if (res.success) {
-        // Double check user role returned
         const role = res.data?.user?.role;
         if (role === "admin") {
           navigate("/admin");
         } else {
-          // Unauthorized role! Log out immediately
           await logout();
           setErrorMsg("Tài khoản của bạn không có quyền truy cập quản trị.");
         }
@@ -117,7 +115,7 @@ const AdminLoginPage = () => {
 
       <style dangerouslySetInnerHTML={{__html: `
         .admin-login-page-wrapper {
-          min-height: calc(100vh - 180px);
+          min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;

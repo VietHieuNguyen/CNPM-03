@@ -16,11 +16,12 @@ import {
   X,
   Search,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from "lucide-react";
 
 const AdminDashboardPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if not admin
@@ -36,6 +37,44 @@ const AdminDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  // Active Admin Tab state
+  const [activeAdminTab, setActiveAdminTab] = useState("comics"); // "comics" or "orders"
+
+  // Order management states
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersTotalPages, setOrdersTotalPages] = useState(1);
+  const [ordersTotalCount, setOrdersTotalCount] = useState(0);
+  const [orderStatusFilter, setOrderStatusFilter] = useState("");
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+
+  // Detailed Order Modal state
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [detailedOrder, setDetailedOrder] = useState(null);
+  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState(false);
+  const [editOrderStatus, setEditOrderStatus] = useState("");
+  const [editPaymentStatus, setEditPaymentStatus] = useState("");
+
+  // User management states
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotalPages, setUsersTotalPages] = useState(1);
+  const [usersTotalCount, setUsersTotalCount] = useState(0);
+  const [userRoleFilter, setUserRoleFilter] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+
+  // Form State for User Add / Edit
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null); // null means adding, string means editing
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userPassword, setUserPassword] = useState("");
+  const [userRole, setUserRole] = useState("member");
+  const [submittingUser, setSubmittingUser] = useState(false);
 
   // Pagination & Filtering
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,13 +142,224 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const fetchOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const params = {
+        page: ordersPage,
+        limit: 10,
+        keyword: orderSearchQuery,
+        status: orderStatusFilter,
+      };
+      const res = await adminAPI.getOrders(params);
+      if (res.success) {
+        setOrders(res.data.orders);
+        setOrdersTotalPages(res.data.pagination.totalPages);
+        setOrdersTotalCount(res.data.pagination.total);
+      }
+    } catch (err) {
+      console.error("Error loading admin orders:", err);
+      setError("Không thể tải danh sách đơn hàng.");
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const openOrderDetail = async (orderId) => {
+    setLoadingOrderDetail(true);
+    setShowOrderDetailModal(true);
+    try {
+      const res = await adminAPI.getOrderDetail(orderId);
+      if (res.success) {
+        setDetailedOrder(res.data.order);
+        setEditOrderStatus(res.data.order.status);
+        setEditPaymentStatus(res.data.order.paymentStatus);
+      }
+    } catch (err) {
+      console.error("Error loading order detail:", err);
+      setError("Không thể tải chi tiết đơn hàng.");
+      setShowOrderDetailModal(false);
+    } finally {
+      setLoadingOrderDetail(false);
+    }
+  };
+
+  const handleSaveOrderChanges = async () => {
+    if (!detailedOrder) return;
+    setUpdatingOrderStatus(true);
+    try {
+      // Update order status if changed
+      if (editOrderStatus !== detailedOrder.status) {
+        await adminAPI.updateOrderStatus(detailedOrder._id, editOrderStatus);
+      }
+      // Update payment status if changed
+      if (editPaymentStatus !== detailedOrder.paymentStatus) {
+        await adminAPI.updateOrderPaymentStatus(detailedOrder._id, editPaymentStatus);
+      }
+
+      setSuccessMsg("Cập nhật đơn hàng thành công!");
+      // Refresh detail
+      const detailRes = await adminAPI.getOrderDetail(detailedOrder._id);
+      if (detailRes.success) {
+        setDetailedOrder(detailRes.data.order);
+        setEditOrderStatus(detailRes.data.order.status);
+        setEditPaymentStatus(detailRes.data.order.paymentStatus);
+      }
+      fetchOrders();
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err) {
+      console.error("Error updating order:", err);
+      setError(err.response?.data?.message || "Lỗi cập nhật đơn hàng.");
+    } finally {
+      setUpdatingOrderStatus(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const params = {
+        page: usersPage,
+        limit: 10,
+        keyword: userSearchQuery,
+        role: userRoleFilter,
+      };
+      const res = await adminAPI.getUsers(params);
+      if (res.success) {
+        setUsers(res.data.users);
+        setUsersTotalPages(res.data.pagination.totalPages);
+        setUsersTotalCount(res.data.pagination.total);
+      }
+    } catch (err) {
+      console.error("Error loading admin users:", err);
+      setError("Không thể tải danh sách tài khoản.");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const openAddUserForm = () => {
+    setEditingUserId(null);
+    setUserName("");
+    setUserEmail("");
+    setUserPassword("");
+    setUserRole("member");
+    setShowUserForm(true);
+  };
+
+  const openEditUserForm = (u) => {
+    setEditingUserId(u._id);
+    setUserName(u.name || "");
+    setUserEmail(u.email || "");
+    setUserPassword("");
+    setUserRole(u.role || "member");
+    setShowUserForm(true);
+  };
+
+  const handleUserFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!userName || !userEmail || (!editingUserId && !userPassword)) {
+      setError("Vui lòng điền đầy đủ các thông tin bắt buộc.");
+      return;
+    }
+
+    setSubmittingUser(true);
+    setError(null);
+
+    try {
+      const payload = {
+        name: userName,
+        email: userEmail,
+        role: userRole,
+      };
+      if (!editingUserId) {
+        payload.password = userPassword;
+      }
+
+      let res;
+      if (editingUserId) {
+        res = await adminAPI.updateUser(editingUserId, payload);
+      } else {
+        res = await adminAPI.createUser(payload);
+      }
+
+      if (res.success) {
+        setSuccessMsg(editingUserId ? "Cập nhật tài khoản thành công!" : "Tạo tài khoản thành công!");
+        setShowUserForm(false);
+        fetchUsers();
+        setTimeout(() => setSuccessMsg(null), 3000);
+      } else {
+        setError(res.message || "Lỗi lưu tài khoản.");
+      }
+    } catch (err) {
+      console.error("Submit user form error:", err);
+      setError(err.response?.data?.message || "Lỗi lưu tài khoản.");
+    } finally {
+      setSubmittingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (id, name) => {
+    if (window.confirm(`Bạn có chắc muốn xoá tài khoản "${name}"? Thao tác này không thể hoàn tác.`)) {
+      try {
+        const res = await adminAPI.deleteUser(id);
+        if (res.success) {
+          setSuccessMsg("Xoá tài khoản thành công!");
+          fetchUsers();
+          setTimeout(() => setSuccessMsg(null), 3000);
+        }
+      } catch (err) {
+        console.error("Delete user error:", err);
+        setError(err.response?.data?.message || "Lỗi khi xoá tài khoản.");
+      }
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
+    // Get initial orders count for stats
+    const getInitialOrderCount = async () => {
+      try {
+        const res = await adminAPI.getOrders({ limit: 1 });
+        if (res.success) {
+          setOrdersTotalCount(res.data.pagination.total);
+        }
+      } catch (err) {
+        console.error("Error loading initial orders count:", err);
+      }
+    };
+    // Get initial users count for stats
+    const getInitialUserCount = async () => {
+      try {
+        const res = await adminAPI.getUsers({ limit: 1 });
+        if (res.success) {
+          setUsersTotalCount(res.data.pagination.total);
+        }
+      } catch (err) {
+        console.error("Error loading initial users count:", err);
+      }
+    };
+    getInitialOrderCount();
+    getInitialUserCount();
   }, []);
 
   useEffect(() => {
-    fetchComics();
-  }, [page, searchQuery, selectedCategoryFilter]);
+    if (activeAdminTab === "comics") {
+      fetchComics();
+    }
+  }, [page, searchQuery, selectedCategoryFilter, activeAdminTab]);
+
+  useEffect(() => {
+    if (activeAdminTab === "orders") {
+      fetchOrders();
+    }
+  }, [ordersPage, orderSearchQuery, orderStatusFilter, activeAdminTab]);
+
+  useEffect(() => {
+    if (activeAdminTab === "users") {
+      fetchUsers();
+    }
+  }, [usersPage, userSearchQuery, userRoleFilter, activeAdminTab]);
 
   // Form Open Helpers
   const openAddForm = () => {
@@ -286,8 +536,92 @@ const AdminDashboardPage = () => {
           <p className="admin-subtitle">Hệ thống quản lý sản phẩm truyện tranh Komorebi</p>
         </div>
 
-        <button className="btn-primary add-product-btn" onClick={openAddForm}>
-          <Plus size={16} /> Thêm truyện mới
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {activeAdminTab === "comics" && (
+            <button className="btn-primary add-product-btn" onClick={openAddForm}>
+              <Plus size={16} /> Thêm truyện mới
+            </button>
+          )}
+          {activeAdminTab === "users" && (
+            <button className="btn-primary add-product-btn" onClick={openAddUserForm}>
+              <Plus size={16} /> Thêm tài khoản mới
+            </button>
+          )}
+          <button
+            className="btn-icon"
+            onClick={async () => { await logout(); navigate("/admin/login"); }}
+            title="Đăng xuất"
+            style={{ padding: "10px", borderRadius: "50%" }}
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="admin-tabs-nav" style={{ display: "flex", gap: "16px", marginBottom: "32px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+        <button 
+          className={`tab-nav-item ${activeAdminTab === "comics" ? "active" : ""}`}
+          onClick={() => { setActiveAdminTab("comics"); setShowForm(false); }}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "1.1rem",
+            fontWeight: activeAdminTab === "comics" ? "600" : "400",
+            color: activeAdminTab === "comics" ? "var(--color-accent)" : "var(--color-text-muted)",
+            padding: "8px 16px",
+            cursor: "pointer",
+            borderBottom: activeAdminTab === "comics" ? "2px solid var(--color-accent)" : "2px solid transparent",
+            display: "flex",
+            alignItems: center => "center", // dummy
+            gap: "8px",
+            transition: "all 0.2s ease"
+          }}
+        >
+          <BookOpen size={18} />
+          Sản phẩm
+        </button>
+        <button 
+          className={`tab-nav-item ${activeAdminTab === "orders" ? "active" : ""}`}
+          onClick={() => { setActiveAdminTab("orders"); setShowForm(false); }}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "1.1rem",
+            fontWeight: activeAdminTab === "orders" ? "600" : "400",
+            color: activeAdminTab === "orders" ? "var(--color-accent)" : "var(--color-text-muted)",
+            padding: "8px 16px",
+            cursor: "pointer",
+            borderBottom: activeAdminTab === "orders" ? "2px solid var(--color-accent)" : "2px solid transparent",
+            display: "flex",
+            alignItems: center => "center", // dummy
+            gap: "8px",
+            transition: "all 0.2s ease"
+          }}
+        >
+          <Tag size={18} />
+          Đơn hàng
+        </button>
+        <button 
+          className={`tab-nav-item ${activeAdminTab === "users" ? "active" : ""}`}
+          onClick={() => { setActiveAdminTab("users"); setShowForm(false); }}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "1.1rem",
+            fontWeight: activeAdminTab === "users" ? "600" : "400",
+            color: activeAdminTab === "users" ? "var(--color-accent)" : "var(--color-text-muted)",
+            padding: "8px 16px",
+            cursor: "pointer",
+            borderBottom: activeAdminTab === "users" ? "2px solid var(--color-accent)" : "2px solid transparent",
+            display: "flex",
+            alignItems: center => "center", // dummy
+            gap: "8px",
+            transition: "all 0.2s ease"
+          }}
+        >
+          <Layers size={18} />
+          Tài khoản
         </button>
       </div>
 
@@ -310,8 +644,15 @@ const AdminDashboardPage = () => {
         <div className="stat-card">
           <Tag className="stat-icon" size={24} />
           <div>
-            <h3>Khách hàng</h3>
-            <p>Trạng thái trực tuyến</p>
+            <h3>{ordersTotalCount}</h3>
+            <p>Tổng số đơn hàng</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <Layers className="stat-icon" size={24} />
+          <div>
+            <h3>{usersTotalCount}</h3>
+            <p>Tổng số tài khoản</p>
           </div>
         </div>
       </div>
@@ -319,131 +660,464 @@ const AdminDashboardPage = () => {
       {/* Main List Workspace */}
       {!showForm ? (
         <div className="admin-list-card animate-fade-in">
-          {/* Filters toolbar */}
-          <div className="admin-toolbar-row">
-            <div className="search-bar-admin">
-              <Search size={16} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm tác phẩm..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
+          {activeAdminTab === "comics" ? (
+            <>
+              {/* Filters toolbar */}
+              <div className="admin-toolbar-row">
+                <div className="search-bar-admin">
+                  <Search size={16} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm tác phẩm..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPage(1);
+                    }}
+                  />
+                </div>
 
-            <select
-              className="admin-cat-filter"
-              value={selectedCategoryFilter}
-              onChange={(e) => {
-                setSelectedCategoryFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả thể loại</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Table list */}
-          {loading ? (
-            <div className="admin-loading">
-              <div className="spinner"></div>
-              <p>Đang tìm dữ liệu sản phẩm...</p>
-            </div>
-          ) : comics.length === 0 ? (
-            <div className="admin-empty-state">
-              <BookOpen size={40} color="var(--color-text-muted)" />
-              <p>Không tìm thấy sản phẩm nào.</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Bìa sách</th>
-                    <th>Tựa đề</th>
-                    <th>Tác giả</th>
-                    <th>Thể loại</th>
-                    <th>Giá gốc</th>
-                    <th>Giảm giá</th>
-                    <th>Tồn kho</th>
-                    <th style={{ textAlign: "center" }}>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comics.map((comic) => {
-                    const cover = comic.images?.[0] || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=100";
-                    return (
-                      <tr key={comic._id}>
-                        <td>
-                          <img src={cover} alt={comic.title} className="table-cover-img" />
-                        </td>
-                        <td>
-                          <strong className="table-comic-title">{comic.title}</strong>
-                        </td>
-                        <td>{comic.author}</td>
-                        <td>{comic.category?.name || "Khác"}</td>
-                        <td>{formatPrice(comic.price)}</td>
-                        <td>{comic.discount}%</td>
-                        <td>{comic.stock}</td>
-                        <td style={{ textAlign: "center" }}>
-                          <div className="table-actions">
-                            <button
-                              className="btn-icon edit-btn"
-                              onClick={() => openEditForm(comic)}
-                              title="Sửa"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              className="btn-icon delete-btn"
-                              onClick={() => handleDeleteComic(comic._id, comic.title)}
-                              title="Xóa"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* Pagination Row */}
-              {totalPages > 1 && (
-                <div className="pagination" style={{ marginTop: "24px" }}>
-                  <button
-                    className="page-btn"
-                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      className={`page-btn ${p === page ? "active" : ""}`}
-                      onClick={() => setPage(p)}
-                    >
-                      {p}
-                    </button>
+                <select
+                  className="admin-cat-filter"
+                  value={selectedCategoryFilter}
+                  onChange={(e) => {
+                    setSelectedCategoryFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả thể loại</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
                   ))}
-                  <button
-                    className="page-btn"
-                    onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={page === totalPages}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
+                </select>
+              </div>
+
+              {/* Table list */}
+              {loading ? (
+                <div className="admin-loading">
+                  <div className="spinner"></div>
+                  <p>Đang tìm dữ liệu sản phẩm...</p>
+                </div>
+              ) : comics.length === 0 ? (
+                <div className="admin-empty-state">
+                  <BookOpen size={40} color="var(--color-text-muted)" />
+                  <p>Không tìm thấy sản phẩm nào.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Bìa sách</th>
+                        <th>Tựa đề</th>
+                        <th>Tác giả</th>
+                        <th>Thể loại</th>
+                        <th>Giá gốc</th>
+                        <th>Giảm giá</th>
+                        <th>Tồn kho</th>
+                        <th style={{ textAlign: "center" }}>Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comics.map((comic) => {
+                        const cover = comic.images?.[0] || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=100";
+                        return (
+                          <tr key={comic._id}>
+                            <td>
+                              <img src={cover} alt={comic.title} className="table-cover-img" />
+                            </td>
+                            <td>
+                              <strong className="table-comic-title">{comic.title}</strong>
+                            </td>
+                            <td>{comic.author}</td>
+                            <td>{comic.category?.name || "Khác"}</td>
+                            <td>{formatPrice(comic.price)}</td>
+                            <td>{comic.discount}%</td>
+                            <td>{comic.stock}</td>
+                            <td style={{ textAlign: "center" }}>
+                              <div className="table-actions">
+                                <button
+                                  className="btn-icon edit-btn"
+                                  onClick={() => openEditForm(comic)}
+                                  title="Sửa"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                  className="btn-icon delete-btn"
+                                  onClick={() => handleDeleteComic(comic._id, comic.title)}
+                                  title="Xóa"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination Row */}
+                  {totalPages > 1 && (
+                    <div className="pagination" style={{ marginTop: "24px" }}>
+                      <button
+                        className="page-btn"
+                        onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                        disabled={page === 1}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          className={`page-btn ${p === page ? "active" : ""}`}
+                          onClick={() => setPage(p)}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        className="page-btn"
+                        onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={page === totalPages}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
+          ) : activeAdminTab === "orders" ? (
+            <>
+              {/* Order Filters toolbar */}
+              <div className="admin-toolbar-row">
+                <div className="search-bar-admin">
+                  <Search size={16} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Tìm mã, khách hàng, SĐT..."
+                    value={orderSearchQuery}
+                    onChange={(e) => {
+                      setOrderSearchQuery(e.target.value);
+                      setOrdersPage(1);
+                    }}
+                  />
+                </div>
+
+                <select
+                  className="admin-cat-filter"
+                  value={orderStatusFilter}
+                  onChange={(e) => {
+                    setOrderStatusFilter(e.target.value);
+                    setOrdersPage(1);
+                  }}
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="pending">Chờ xử lý</option>
+                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="preparing">Đang chuẩn bị</option>
+                  <option value="shipping">Đang vận chuyển</option>
+                  <option value="delivered">Đã giao hàng</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
+              </div>
+
+              {/* Order Table list */}
+              {loadingOrders ? (
+                <div className="admin-loading">
+                  <div className="spinner"></div>
+                  <p>Đang tìm dữ liệu đơn hàng...</p>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="admin-empty-state">
+                  <Tag size={40} color="var(--color-text-muted)" />
+                  <p>Không tìm thấy đơn hàng nào.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "12%" }}>Mã đơn hàng</th>
+                        <th style={{ width: "18%" }}>Khách hàng</th>
+                        <th style={{ width: "12%" }}>Ngày đặt</th>
+                        <th style={{ width: "10%", textAlign: "center" }}>Phương thức</th>
+                        <th style={{ width: "13%", textAlign: "center" }}>Thanh toán</th>
+                        <th style={{ width: "13%", textAlign: "center" }}>Trạng thái</th>
+                        <th style={{ width: "12%", textAlign: "right" }}>Tổng tiền</th>
+                        <th style={{ width: "10%", textAlign: "center" }}>Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => {
+                        const dateStr = new Date(order.createdAt).toLocaleDateString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric"
+                        });
+                        
+                        const getStatusLabel = (status) => {
+                          const labels = {
+                            pending: { text: "Chờ xử lý", color: "#B78A39", bg: "#FDF8F0" },
+                            confirmed: { text: "Đã xác nhận", color: "#3B71CA", bg: "#EBF1FA" },
+                            preparing: { text: "Đang chuẩn bị", color: "#6A5ACD", bg: "#F0EEF9" },
+                            shipping: { text: "Đang vận chuyển", color: "#39B7B2", bg: "#F0FDFD" },
+                            delivered: { text: "Đã giao hàng", color: "#198754", bg: "#F0F9F4" },
+                            cancelled: { text: "Đã hủy", color: "#DC3545", bg: "#FDF0F1" }
+                          };
+                          return labels[status] || { text: status, color: "#6c757d", bg: "#f8f9fa" };
+                        };
+
+                        const getPaymentStatusLabel = (status) => {
+                          const labels = {
+                            pending: { text: "Chưa thanh toán", color: "#DC3545", bg: "#FDF0F1" },
+                            paid: { text: "Đã thanh toán", color: "#198754", bg: "#F0F9F4" },
+                            refunded: { text: "Đã hoàn tiền", color: "#6c757d", bg: "#f8f9fa" }
+                          };
+                          return labels[status] || { text: status, color: "#6c757d", bg: "#f8f9fa" };
+                        };
+
+                        const sLabel = getStatusLabel(order.status);
+                        const pLabel = getPaymentStatusLabel(order.paymentStatus);
+
+                        return (
+                          <tr key={order._id}>
+                            <td>
+                              <span style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                                #{order._id.substring(order._id.length - 8).toUpperCase()}
+                              </span>
+                            </td>
+                            <td>
+                              <div>
+                                <div><strong>{order.shippingAddress?.name || order.user?.name || "Khách"}</strong></div>
+                                <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{order.shippingAddress?.phone}</div>
+                              </div>
+                            </td>
+                            <td>{dateStr}</td>
+                            <td style={{ textAlign: "center" }}>
+                              <span style={{ fontSize: "0.8rem", fontWeight: "600", color: order.paymentMethod === "ONLINE" ? "#6A5ACD" : "#8B5A2B" }}>
+                                {order.paymentMethod}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                              <span style={{ 
+                                padding: "4px 8px", 
+                                fontSize: "0.75rem", 
+                                fontWeight: "600", 
+                                color: pLabel.color, 
+                                backgroundColor: pLabel.bg, 
+                                borderRadius: "4px" 
+                              }}>
+                                {pLabel.text}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                              <span style={{ 
+                                padding: "4px 8px", 
+                                fontSize: "0.75rem", 
+                                fontWeight: "600", 
+                                color: sLabel.color, 
+                                backgroundColor: sLabel.bg, 
+                                borderRadius: "4px" 
+                              }}>
+                                {sLabel.text}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "right" }}><strong>{formatPrice(order.totalAmount)}</strong></td>
+                            <td style={{ textAlign: "center" }}>
+                              <button
+                                className="btn-icon edit-btn"
+                                onClick={() => openOrderDetail(order._id)}
+                                title="Xem chi tiết & duyệt đơn"
+                              >
+                                <Search size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Orders Pagination */}
+                  {ordersTotalPages > 1 && (
+                    <div className="pagination" style={{ marginTop: "24px" }}>
+                      <button
+                        className="page-btn"
+                        onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
+                        disabled={ordersPage === 1}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      {Array.from({ length: ordersTotalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          className={`page-btn ${p === ordersPage ? "active" : ""}`}
+                          onClick={() => setOrdersPage(p)}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        className="page-btn"
+                        onClick={() => setOrdersPage(prev => Math.min(prev + 1, ordersTotalPages))}
+                        disabled={ordersPage === ordersTotalPages}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Users Filters toolbar */}
+              <div className="admin-toolbar-row">
+                <div className="search-bar-admin">
+                  <Search size={16} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Tìm tên, email tài khoản..."
+                    value={userSearchQuery}
+                    onChange={(e) => {
+                      setUserSearchQuery(e.target.value);
+                      setUsersPage(1);
+                    }}
+                  />
+                </div>
+
+                <select
+                  className="admin-cat-filter"
+                  value={userRoleFilter}
+                  onChange={(e) => {
+                    setUserRoleFilter(e.target.value);
+                    setUsersPage(1);
+                  }}
+                >
+                  <option value="">Tất cả vai trò</option>
+                  <option value="admin">Quản trị viên (Admin)</option>
+                  <option value="member">Khách hàng (Member)</option>
+                </select>
+              </div>
+
+              {/* Users Table list */}
+              {loadingUsers ? (
+                <div className="admin-loading">
+                  <div className="spinner"></div>
+                  <p>Đang tìm dữ liệu tài khoản...</p>
+                </div>
+              ) : users.length === 0 ? (
+                <div className="admin-empty-state">
+                  <Layers size={40} color="var(--color-text-muted)" />
+                  <p>Không tìm thấy tài khoản nào.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Tên hiển thị</th>
+                        <th>Email đăng nhập</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th style={{ textAlign: "center" }}>Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => {
+                        const dateStr = new Date(u.createdAt).toLocaleDateString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric"
+                        });
+                        
+                        return (
+                          <tr key={u._id}>
+                            <td>
+                              <strong>{u.name}</strong>
+                              {u._id === user?._id && (
+                                <span style={{ marginLeft: "8px", fontSize: "0.7rem", backgroundColor: "var(--color-accent-light)", color: "var(--color-accent)", padding: "2px 6px", borderRadius: "4px" }}>
+                                  Tôi
+                                </span>
+                              )}
+                            </td>
+                            <td>{u.email}</td>
+                            <td>
+                              <span style={{ 
+                                padding: "4px 8px", 
+                                fontSize: "0.75rem", 
+                                fontWeight: "600", 
+                                color: u.role === "admin" ? "#A34E36" : "#6c757d", 
+                                backgroundColor: u.role === "admin" ? "rgba(163, 78, 54, 0.1)" : "#f8f9fa", 
+                                borderRadius: "4px" 
+                              }}>
+                                {u.role === "admin" ? "Admin" : "Khách hàng"}
+                              </span>
+                            </td>
+                            <td>{dateStr}</td>
+                            <td style={{ textAlign: "center" }}>
+                              <div className="table-actions">
+                                <button
+                                  className="btn-icon edit-btn"
+                                  onClick={() => openEditUserForm(u)}
+                                  title="Chỉnh sửa"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                  className="btn-icon delete-btn"
+                                  onClick={() => handleDeleteUser(u._id, u.name)}
+                                  title="Xóa"
+                                  disabled={u._id === user?._id}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Users Pagination */}
+                  {usersTotalPages > 1 && (
+                    <div className="pagination" style={{ marginTop: "24px" }}>
+                      <button
+                        className="page-btn"
+                        onClick={() => setUsersPage(prev => Math.max(prev - 1, 1))}
+                        disabled={usersPage === 1}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      {Array.from({ length: usersTotalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          className={`page-btn ${p === usersPage ? "active" : ""}`}
+                          onClick={() => setUsersPage(p)}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        className="page-btn"
+                        onClick={() => setUsersPage(prev => Math.min(prev + 1, usersTotalPages))}
+                        disabled={usersPage === usersTotalPages}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -688,9 +1362,353 @@ const AdminDashboardPage = () => {
       )}
 
       {/* Styled Sheets for Admin Panel */}
+      {/* Add / Edit User Form Modal */}
+      {showUserForm && (
+        <div className="admin-modal-overlay animate-fade-in" style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: "20px"
+        }}>
+          <div className="admin-modal-content animate-slide-up" style={{
+            backgroundColor: "white",
+            border: "1px solid var(--border-color)",
+            width: "100%",
+            maxWidth: "500px",
+            padding: "32px",
+            boxShadow: "var(--shadow-lg)",
+            position: "relative",
+            color: "var(--color-text-main)"
+          }}>
+            <button 
+              onClick={() => setShowUserForm(false)}
+              style={{
+                position: "absolute",
+                top: "24px",
+                right: "24px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--color-text-muted)"
+              }}
+            >
+              <X size={24} />
+            </button>
+
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.8rem", color: "var(--color-accent)", marginBottom: "24px" }}>
+              {editingUserId ? "Cập nhật tài khoản" : "Tạo tài khoản mới"}
+            </h2>
+
+            <form onSubmit={handleUserFormSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="form-input-wrapper">
+                <label>Tên hiển thị *</label>
+                <input
+                  type="text"
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-input-wrapper">
+                <label>Email đăng nhập *</label>
+                <input
+                  type="email"
+                  placeholder="Ví dụ: name@example.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  required
+                  disabled={!!editingUserId}
+                />
+              </div>
+
+              {!editingUserId && (
+                <div className="form-input-wrapper">
+                  <label>Mật khẩu đăng nhập *</label>
+                  <input
+                    type="password"
+                    placeholder="Tối thiểu 6 ký tự"
+                    value={userPassword}
+                    onChange={(e) => setUserPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="form-input-wrapper">
+                <label>Vai trò hệ thống *</label>
+                <select 
+                  value={userRole} 
+                  onChange={(e) => setUserRole(e.target.value)}
+                  required
+                >
+                  <option value="member">Khách hàng (Member)</option>
+                  <option value="admin">Quản trị viên (Admin)</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
+                <button
+                  type="submit"
+                  className="btn-submit-admin"
+                  disabled={submittingUser}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    backgroundColor: "var(--color-accent)",
+                    color: "white",
+                    border: "none",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  {submittingUser ? "Đang xử lý..." : "Lưu thay đổi"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUserForm(false)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    backgroundColor: "transparent",
+                    color: "var(--color-text-muted)",
+                    border: "1px solid var(--border-color-dark)",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  Hủy bỏ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Order Modal */}
+      {showOrderDetailModal && (
+        <div className="admin-modal-overlay animate-fade-in" style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: "20px"
+        }}>
+          <div className="admin-modal-content animate-slide-up" style={{
+            backgroundColor: "white",
+            border: "1px solid var(--border-color)",
+            width: "100%",
+            maxWidth: "800px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            padding: "32px",
+            boxShadow: "var(--shadow-lg)",
+            position: "relative",
+            color: "var(--color-text-main)"
+          }}>
+            <button 
+              onClick={() => { setShowOrderDetailModal(false); setDetailedOrder(null); }}
+              style={{
+                position: "absolute",
+                top: "24px",
+                right: "24px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--color-text-muted)"
+              }}
+            >
+              <X size={24} />
+            </button>
+
+            {loadingOrderDetail ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "64px 0" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid #eee", borderTopColor: "var(--color-accent)", animation: "spin 1s linear infinite" }}></div>
+                <p style={{ marginTop: "16px", color: "var(--color-text-muted)" }}>Đang tải thông tin đơn hàng...</p>
+              </div>
+            ) : detailedOrder ? (
+              <div>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.8rem", color: "var(--color-accent)", marginBottom: "8px" }}>
+                  Chi tiết đơn hàng #{detailedOrder._id.substring(detailedOrder._id.length - 8).toUpperCase()}
+                </h2>
+                <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "24px" }}>
+                  Ngày đặt: {new Date(detailedOrder.createdAt).toLocaleString("vi-VN")}
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginBottom: "32px" }}>
+                  {/* Shipping Info */}
+                  <div>
+                    <h3 style={{ fontSize: "1rem", fontWeight: "600", borderBottom: "1px solid var(--border-color-dark)", paddingBottom: "8px", marginBottom: "12px" }}>
+                      Địa chỉ nhận hàng
+                    </h3>
+                    <p style={{ margin: "4px 0", fontSize: "0.9rem" }}><strong>Họ tên:</strong> {detailedOrder.shippingAddress?.name}</p>
+                    <p style={{ margin: "4px 0", fontSize: "0.9rem" }}><strong>Điện thoại:</strong> {detailedOrder.shippingAddress?.phone}</p>
+                    <p style={{ margin: "4px 0", fontSize: "0.9rem" }}><strong>Địa chỉ:</strong> {detailedOrder.shippingAddress?.address}</p>
+                    <p style={{ margin: "4px 0", fontSize: "0.9rem" }}><strong>Thành phố:</strong> {detailedOrder.shippingAddress?.city}</p>
+                    {detailedOrder.note && (
+                      <p style={{ margin: "8px 0 0 0", fontSize: "0.9rem", fontStyle: "italic", color: "var(--color-text-muted)" }}>
+                        <strong>Ghi chú:</strong> {detailedOrder.note}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Payment & Action Info */}
+                  <div>
+                    <h3 style={{ fontSize: "1rem", fontWeight: "600", borderBottom: "1px solid var(--border-color-dark)", paddingBottom: "8px", marginBottom: "12px" }}>
+                      Trạng thái & Thanh toán
+                    </h3>
+                    <p style={{ margin: "4px 0", fontSize: "0.9rem" }}><strong>Hình thức:</strong> {detailedOrder.paymentMethod}</p>
+                    
+                    <div style={{ marginTop: "16px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
+                        Trạng thái đơn hàng:
+                      </label>
+                      <select 
+                        value={editOrderStatus}
+                        onChange={(e) => setEditOrderStatus(e.target.value)}
+                        disabled={updatingOrderStatus}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-color)",
+                          backgroundColor: "#f8f9fa"
+                        }}
+                      >
+                        <option value="pending">Chờ xử lý</option>
+                        <option value="confirmed">Đã xác nhận (Duyệt)</option>
+                        <option value="preparing">Đang chuẩn bị hàng</option>
+                        <option value="shipping">Đang vận chuyển</option>
+                        <option value="delivered">Đã giao hàng thành công</option>
+                        <option value="cancelled">Đã hủy đơn hàng</option>
+                      </select>
+                    </div>
+
+                    <div style={{ marginTop: "12px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
+                        Trạng thái thanh toán:
+                      </label>
+                      <select 
+                        value={editPaymentStatus}
+                        onChange={(e) => setEditPaymentStatus(e.target.value)}
+                        disabled={updatingOrderStatus}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-color)",
+                          backgroundColor: "#f8f9fa"
+                        }}
+                      >
+                        <option value="pending">Chưa thanh toán</option>
+                        <option value="paid">Đã thanh toán</option>
+                        <option value="refunded">Đã hoàn tiền</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items list */}
+                <h3 style={{ fontSize: "1rem", fontWeight: "600", borderBottom: "1px solid var(--border-color-dark)", paddingBottom: "8px", marginBottom: "16px" }}>
+                  Danh sách sản phẩm
+                </h3>
+                <div style={{ marginBottom: "24px" }}>
+                  {detailedOrder.items.map((item, idx) => (
+                    <div key={idx} style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      padding: "12px 0", 
+                      borderBottom: "1px solid #eee" 
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                        <img 
+                          src={item.image || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=100"} 
+                          alt={item.title} 
+                          style={{ width: "50px", aspectRatio: "3/4", objectFit: "cover", border: "1px solid #ddd" }}
+                        />
+                        <div>
+                          <strong style={{ fontSize: "0.95rem" }}>{item.title}</strong>
+                          <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: "4px" }}>
+                            {formatPrice(item.price)} x {item.quantity}
+                          </div>
+                        </div>
+                      </div>
+                      <span style={{ fontWeight: "600", fontSize: "0.95rem" }}>
+                        {formatPrice(item.price * item.quantity)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "2px solid var(--border-color-dark)", paddingTop: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1rem", color: "var(--color-text-muted)" }}>Tổng tiền:</span>
+                    <strong style={{ fontSize: "1.4rem", color: "var(--color-accent)" }}>
+                      {formatPrice(detailedOrder.totalAmount)}
+                    </strong>
+                  </div>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <button
+                      onClick={() => { setShowOrderDetailModal(false); setDetailedOrder(null); }}
+                      style={{
+                        padding: "10px 24px",
+                        backgroundColor: "transparent",
+                        color: "var(--color-text-muted)",
+                        border: "1px solid var(--border-color-dark)",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        fontSize: "0.9rem"
+                      }}
+                    >
+                      Đóng
+                    </button>
+                    <button
+                      onClick={handleSaveOrderChanges}
+                      disabled={updatingOrderStatus || (editOrderStatus === detailedOrder.status && editPaymentStatus === detailedOrder.paymentStatus)}
+                      style={{
+                        padding: "10px 24px",
+                        backgroundColor: (editOrderStatus !== detailedOrder.status || editPaymentStatus !== detailedOrder.paymentStatus) ? "var(--color-accent)" : "#ccc",
+                        color: "white",
+                        border: "none",
+                        fontWeight: "600",
+                        cursor: (editOrderStatus !== detailedOrder.status || editPaymentStatus !== detailedOrder.paymentStatus) ? "pointer" : "not-allowed",
+                        fontSize: "0.9rem"
+                      }}
+                    >
+                      {updatingOrderStatus ? "Đang cập nhật..." : "Cập nhật đơn hàng"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p>Lỗi hiển thị thông tin.</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{__html: `
         .admin-dashboard {
-          padding-top: 48px;
+          padding-top: 32px;
+          padding-bottom: 48px;
+          min-height: 100vh;
         }
 
         .admin-header {
@@ -721,7 +1739,7 @@ const AdminDashboardPage = () => {
         /* Stats Cards */
         .admin-stats-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 24px;
           margin-bottom: 40px;
         }
