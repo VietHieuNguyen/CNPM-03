@@ -10,6 +10,7 @@ const CollectionPage = () => {
   const [accumulatedComics, setAccumulatedComics] = useState([]);
   const [paginationMode, setPaginationMode] = useState("horizontal"); // "horizontal" or "vertical"
   const [categories, setCategories] = useState([]);
+  const [authors, setAuthors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -21,6 +22,7 @@ const CollectionPage = () => {
   // Read URL query parameters
   const keyword = searchParams.get("keyword") || "";
   const selectedCategory = searchParams.get("category") || "";
+  const selectedAuthor = searchParams.get("author") || "";
   const selectedStatus = searchParams.get("status") || ""; // "available" or "outofstock"
   const activePage = Number(searchParams.get("page")) || 1;
   const activeSort = searchParams.get("sort") || "newest";
@@ -43,6 +45,21 @@ const CollectionPage = () => {
     fetchCategories();
   }, []);
 
+  // Fetch Authors
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      try {
+        const res = await comicAPI.getAuthors();
+        if (res.success) {
+          setAuthors(res.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching authors:", err);
+      }
+    };
+    fetchAuthors();
+  }, []);
+
   // Fetch Comics based on filter inputs
   useEffect(() => {
     const fetchComics = async () => {
@@ -53,6 +70,7 @@ const CollectionPage = () => {
           limit: 6, // 6 items to match pagination layout in mockup
           keyword,
           category: selectedCategory,
+          author: selectedAuthor,
           status: selectedStatus,
           sort: activeSort,
         };
@@ -74,7 +92,7 @@ const CollectionPage = () => {
       }
     };
     fetchComics();
-  }, [keyword, selectedCategory, selectedStatus, activePage, activeSort]);
+  }, [keyword, selectedCategory, selectedAuthor, selectedStatus, activePage, activeSort]);
 
   // Sync state with URL parameter if updated elsewhere
   useEffect(() => {
@@ -145,14 +163,14 @@ const CollectionPage = () => {
             <div className="filter-options">
               {categories.map((cat) => {
                 const catId = cat._id || cat.id;
-                const isSelected = selectedCategory === catId;
+                const isSelected = selectedCategory === cat.slug || selectedCategory === catId;
                 return (
                   <label key={catId} className={`filter-radio-label ${isSelected ? "active" : ""}`}>
                     <input
                       type="radio"
                       name="category"
                       checked={isSelected}
-                      onChange={() => updateFilters("category", isSelected ? "" : catId)}
+                      onChange={() => updateFilters("category", isSelected ? "" : cat.slug)}
                     />
                     <span className="radio-dot"></span>
                     <span className="option-name">{cat.name}</span>
@@ -161,6 +179,30 @@ const CollectionPage = () => {
               })}
             </div>
           </div>
+
+          {/* Authors List */}
+          {authors.length > 0 && (
+            <div className="filter-group">
+              <h4 className="filter-title">TÁC GIẢ</h4>
+              <div className="filter-options" style={{ maxHeight: "180px", overflowY: "auto", paddingRight: "4px" }}>
+                {authors.map((authorName) => {
+                  const isSelected = selectedAuthor === authorName;
+                  return (
+                    <label key={authorName} className={`filter-radio-label ${isSelected ? "active" : ""}`}>
+                      <input
+                        type="radio"
+                        name="author"
+                        checked={isSelected}
+                        onChange={() => updateFilters("author", isSelected ? "" : authorName)}
+                      />
+                      <span className="radio-dot"></span>
+                      <span className="option-name">{authorName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Status List */}
           <div className="filter-group">

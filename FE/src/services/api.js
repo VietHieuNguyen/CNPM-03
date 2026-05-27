@@ -122,6 +122,10 @@ export const comicAPI = {
     const response = await apiClient.get(`/comics/${slug}`);
     return response.data;
   },
+  getAuthors: async () => {
+    const response = await apiClient.get("/comics/authors");
+    return response.data;
+  },
 };
 
 export const categoryAPI = {

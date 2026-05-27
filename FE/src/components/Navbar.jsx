@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, User, LogOut, Search, Menu, X, BookOpen, Compass, ClipboardList, MapPin } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -8,11 +8,23 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const checkActive = (path, paramName, paramValue) => {
+    if (location.pathname !== path) return false;
+    
+    const params = new URLSearchParams(location.search);
+    if (!paramName) {
+      return !params.has("sort") && !params.has("category");
+    }
+    
+    return params.get(paramName) === paramValue;
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -43,18 +55,18 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="desktop-nav">
-          <NavLink to="/collection" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+          <Link to="/collection" className={`nav-link ${checkActive("/collection") ? "active" : ""}`}>
             Bộ sưu tập
-          </NavLink>
-          <NavLink to="/collection?sort=newest" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+          </Link>
+          <Link to="/collection?sort=newest" className={`nav-link ${checkActive("/collection", "sort", "newest") ? "active" : ""}`}>
             Mới về
-          </NavLink>
-          <NavLink to="/collection?sort=bestseller" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+          </Link>
+          <Link to="/collection?sort=bestseller" className={`nav-link ${checkActive("/collection", "sort", "bestseller") ? "active" : ""}`}>
             Tác giả
-          </NavLink>
-          <NavLink to="/collection?category=manga" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+          </Link>
+          <Link to="/collection?category=manga" className={`nav-link ${checkActive("/collection", "category", "manga") ? "active" : ""}`}>
             Góc đọc
-          </NavLink>
+          </Link>
         </nav>
 
         {/* Toolbar Icons */}
@@ -138,10 +150,10 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="mobile-nav-drawer animate-fade-in">
           <nav className="mobile-nav-links">
-            <Link to="/collection" onClick={() => setMobileMenuOpen(false)}>Bộ sưu tập</Link>
-            <Link to="/collection?sort=newest" onClick={() => setMobileMenuOpen(false)}>Mới về</Link>
-            <Link to="/collection?sort=bestseller" onClick={() => setMobileMenuOpen(false)}>Tác giả</Link>
-            <Link to="/collection?category=manga" onClick={() => setMobileMenuOpen(false)}>Góc đọc</Link>
+            <Link to="/collection" className={checkActive("/collection") ? "active" : ""} onClick={() => setMobileMenuOpen(false)}>Bộ sưu tập</Link>
+            <Link to="/collection?sort=newest" className={checkActive("/collection", "sort", "newest") ? "active" : ""} onClick={() => setMobileMenuOpen(false)}>Mới về</Link>
+            <Link to="/collection?sort=bestseller" className={checkActive("/collection", "sort", "bestseller") ? "active" : ""} onClick={() => setMobileMenuOpen(false)}>Tác giả</Link>
+            <Link to="/collection?category=manga" className={checkActive("/collection", "category", "manga") ? "active" : ""} onClick={() => setMobileMenuOpen(false)}>Góc đọc</Link>
              {user ? (
               <>
                 <hr style={{ borderColor: "var(--border-color)", margin: "16px 0" }} />
@@ -376,6 +388,10 @@ const Navbar = () => {
           font-size: 1.1rem;
           font-weight: 500;
           color: var(--color-text-muted);
+        }
+        .mobile-nav-links a.active {
+          color: var(--color-accent);
+          font-weight: 600;
         }
         .mobile-logout-btn {
           text-align: left;

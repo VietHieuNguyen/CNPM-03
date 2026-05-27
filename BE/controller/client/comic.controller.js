@@ -1,4 +1,6 @@
+const mongoose = require("mongoose")
 const Comic = require("../../model/Comic")
+const Category = require("../../model/Category")
 
 // GET /api/v1/comics — danh sách + tìm kiếm + lọc
 module.exports.list = async (req, res) => {
@@ -6,6 +8,7 @@ module.exports.list = async (req, res) => {
     const {
       keyword,
       category,
+      author,
       minPrice,
       maxPrice,
       tags,
@@ -25,7 +28,22 @@ module.exports.list = async (req, res) => {
       ]
     }
 
-    if (category) filter.category = category
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        filter.category = category
+      } else {
+        const foundCategory = await Category.findOne({ slug: category })
+        if (foundCategory) {
+          filter.category = foundCategory._id
+        } else {
+          filter.category = new mongoose.Types.ObjectId()
+        }
+      }
+    }
+
+    if (author) {
+      filter.author = { $regex: author, $options: "i" }
+    }
 
     if (minPrice || maxPrice) {
       filter.price = {}
@@ -159,6 +177,17 @@ module.exports.detail = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: { comic } })
   } catch (error) {
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
+  }
+}
+
+// GET /api/v1/comics/authors — danh sách tác giả
+module.exports.authors = async (req, res) => {
+  try {
+    const authors = await Comic.distinct("author", { status: "active" })
+    return res.status(200).json({ success: true, data: authors })
+  } catch (error) {
+    console.error("Get authors error:", error)
     return res.status(500).json({ success: false, message: "Lỗi máy chủ." })
   }
 }
