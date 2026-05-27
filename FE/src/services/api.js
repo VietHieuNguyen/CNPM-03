@@ -48,6 +48,50 @@ export const authAPI = {
     const response = await apiClient.get("/user/profile");
     return response.data;
   },
+  updateProfile: async (formData) => {
+    const response = await apiClient.patch("/user/profile", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+  uploadImage: async (formData) => {
+    const response = await apiClient.post("/user/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+  forgotPassword: async (email) => {
+    const response = await apiClient.post("/user/forgot-password", { email });
+    return response.data;
+  },
+  resetPassword: async (email, otp, newPassword) => {
+    const response = await apiClient.post("/user/reset-password", { email, otp, newPassword });
+    return response.data;
+  },
+  getAddresses: async () => {
+    const response = await apiClient.get("/user/addresses");
+    return response.data;
+  },
+  addAddress: async (addressData) => {
+    const response = await apiClient.post("/user/addresses", addressData);
+    return response.data;
+  },
+  updateAddress: async (addressId, addressData) => {
+    const response = await apiClient.put(`/user/addresses/${addressId}`, addressData);
+    return response.data;
+  },
+  deleteAddress: async (addressId) => {
+    const response = await apiClient.delete(`/user/addresses/${addressId}`);
+    return response.data;
+  },
+  setDefaultAddress: async (addressId) => {
+    const response = await apiClient.patch(`/user/addresses/${addressId}/default`);
+    return response.data;
+  },
 };
 
 export const comicAPI = {

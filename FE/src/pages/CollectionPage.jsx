@@ -7,6 +7,8 @@ import ComicCard from "../components/ComicCard";
 const CollectionPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [comics, setComics] = useState([]);
+  const [accumulatedComics, setAccumulatedComics] = useState([]);
+  const [paginationMode, setPaginationMode] = useState("horizontal"); // "horizontal" or "vertical"
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -58,6 +60,11 @@ const CollectionPage = () => {
         const res = await comicAPI.getComics(params);
         if (res.success) {
           setComics(res.data.comics);
+          if (activePage === 1) {
+            setAccumulatedComics(res.data.comics);
+          } else {
+            setAccumulatedComics((prev) => [...prev, ...res.data.comics]);
+          }
           setPagination(res.data.pagination);
         }
       } catch (err) {
@@ -205,18 +212,70 @@ const CollectionPage = () => {
 
         {/* Right Comics Grid Area */}
         <main className="comics-main-area">
+          <div className="collection-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", borderBottom: "1px dashed var(--border-color-dark)", paddingBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <span style={{ fontSize: "0.9rem", color: "var(--color-text-muted)" }}>
+              Hiển thị {paginationMode === "horizontal" ? comics.length : accumulatedComics.length} trong số {pagination.total} truyện
+            </span>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>Chế độ xem:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaginationMode("horizontal");
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set("page", "1");
+                  setSearchParams(newParams);
+                }}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "0.8rem",
+                  backgroundColor: paginationMode === "horizontal" ? "var(--color-accent)" : "white",
+                  color: paginationMode === "horizontal" ? "white" : "var(--color-text-main)",
+                  border: "1px solid var(--border-color-dark)",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  transition: "var(--transition)"
+                }}
+              >
+                Phân trang ngang
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaginationMode("vertical");
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set("page", "1");
+                  setSearchParams(newParams);
+                }}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "0.8rem",
+                  backgroundColor: paginationMode === "vertical" ? "var(--color-accent)" : "white",
+                  color: paginationMode === "vertical" ? "white" : "var(--color-text-main)",
+                  border: "1px solid var(--border-color-dark)",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  transition: "var(--transition)"
+                }}
+              >
+                Tải thêm (Dọc)
+              </button>
+            </div>
+          </div>
+
           {keyword && (
-            <div className="search-result-info">
+            <div className="search-result-info" style={{ marginTop: "-8px", marginBottom: "20px" }}>
               Kết quả tìm kiếm cho: <strong>"{keyword}"</strong> ({pagination.total} truyện)
             </div>
           )}
 
-          {loading ? (
+          {loading && (paginationMode === "horizontal" || activePage === 1) ? (
             <div className="collection-loading">
               <div className="spinner"></div>
               <p>Đang tìm kiếm sách trên kệ...</p>
             </div>
-          ) : comics.length === 0 ? (
+          ) : (paginationMode === "horizontal" ? comics.length : accumulatedComics.length) === 0 ? (
             <div className="no-comics-found">
               <p>Không tìm thấy tác phẩm nào khớp với bộ lọc của bạn.</p>
               <button onClick={clearFilters} className="btn-secondary" style={{ marginTop: "16px" }}>
@@ -226,13 +285,13 @@ const CollectionPage = () => {
           ) : (
             <>
               <div className="grid-products-collection">
-                {comics.map((comic) => (
+                {(paginationMode === "horizontal" ? comics : accumulatedComics).map((comic) => (
                   <ComicCard key={comic._id} comic={comic} />
                 ))}
               </div>
 
-              {/* Styled Pagination */}
-              {pagination.totalPages > 1 && (
+              {/* Styled Horizontal Pagination */}
+              {paginationMode === "horizontal" && pagination.totalPages > 1 && (
                 <div className="pagination">
                   <button
                     className="page-btn"
@@ -258,6 +317,25 @@ const CollectionPage = () => {
                     disabled={activePage === pagination.totalPages}
                   >
                     <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Load More Vertical Pagination */}
+              {paginationMode === "vertical" && pagination.page < pagination.totalPages && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newParams = new URLSearchParams(searchParams);
+                      newParams.set("page", (activePage + 1).toString());
+                      setSearchParams(newParams);
+                    }}
+                    className="btn-primary"
+                    style={{ padding: "12px 32px", fontSize: "0.9rem", width: "fit-content" }}
+                    disabled={loading}
+                  >
+                    {loading ? "Đang tải thêm..." : "Tải thêm truyện tranh"}
                   </button>
                 </div>
               )}

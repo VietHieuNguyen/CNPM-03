@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { CreditCard, Truck, MapPin, ClipboardList, CheckCircle2, AlertCircle } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { orderAPI, paymentAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { orderAPI, paymentAPI, authAPI } from "../services/api";
 import { formatPrice } from "../components/ComicCard";
 
 const CheckoutPage = () => {
@@ -30,6 +31,9 @@ const CheckoutPage = () => {
   const [sepayAccountNo, setSepayAccountNo] = useState("0123456789");
   const [sepayAccountName, setSepayAccountName] = useState("NGUYEN VIET HIEU");
 
+  const { user } = useAuth();
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
   // Fetch SePay configuration from backend on mount
   React.useEffect(() => {
     const fetchPaymentConfig = async () => {
@@ -46,6 +50,30 @@ const CheckoutPage = () => {
     };
     fetchPaymentConfig();
   }, []);
+
+  // Fetch saved addresses if logged in
+  React.useEffect(() => {
+    if (user) {
+      const fetchAddresses = async () => {
+        try {
+          const res = await authAPI.getAddresses();
+          if (res.success && res.data.length > 0) {
+            setSavedAddresses(res.data);
+            const defaultAddr = res.data.find(addr => addr.isDefault) || res.data[0];
+            if (defaultAddr) {
+              setName(defaultAddr.name);
+              setPhone(defaultAddr.phone);
+              setAddress(defaultAddr.address);
+              setCity(defaultAddr.city);
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi lấy sổ địa chỉ:", err);
+        }
+      };
+      fetchAddresses();
+    }
+  }, [user]);
 
   // Polling loop inside a useEffect that triggers when placedOrder is set
   React.useEffect(() => {
@@ -164,6 +192,49 @@ const CheckoutPage = () => {
               <MapPin size={18} /> Thông tin giao hàng
             </h3>
             
+            {savedAddresses.length > 0 && (
+              <div className="saved-addresses-selector-checkout" style={{ marginBottom: "24px", padding: "16px", backgroundColor: "#FAF5EE", border: "1px solid var(--border-color-dark)" }}>
+                <label style={{ fontSize: "0.8rem", textTransform: "uppercase", fontWeight: "600", color: "var(--color-text-main)", display: "block", marginBottom: "10px" }}>
+                  Chọn nhanh từ Sổ địa chỉ
+                </label>
+                <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}>
+                  {savedAddresses.map((addr) => {
+                    const isSelected = name === addr.name && phone === addr.phone && address === addr.address && city === addr.city;
+                    return (
+                      <button
+                        key={addr._id}
+                        type="button"
+                        onClick={() => {
+                          setName(addr.name);
+                          setPhone(addr.phone);
+                          setAddress(addr.address);
+                          setCity(addr.city);
+                        }}
+                        style={{
+                          padding: "12px",
+                          backgroundColor: "white",
+                          border: isSelected ? "2px solid var(--color-accent)" : "1px solid var(--border-color-dark)",
+                          textAlign: "left",
+                          fontSize: "0.85rem",
+                          flexShrink: 0,
+                          cursor: "pointer",
+                          minWidth: "200px",
+                          boxShadow: isSelected ? "var(--shadow-sm)" : "none",
+                          transition: "var(--transition)"
+                        }}
+                      >
+                        <strong style={{ display: "block", color: "var(--color-text-main)" }}>
+                          {addr.name} {addr.isDefault && <span style={{ color: "var(--color-accent)", fontSize: "0.7rem", fontWeight: "600" }}>(Mặc định)</span>}
+                        </strong>
+                        <span style={{ display: "block", color: "var(--color-text-muted)", fontSize: "0.75rem", marginTop: "4px" }}>SĐT: {addr.phone}</span>
+                        <span style={{ display: "block", color: "var(--color-text-muted)", fontSize: "0.75rem" }}>{addr.address}, {addr.city}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="form-group-grid">
               <div className="form-input-wrapper">
                 <label htmlFor="full-name">Họ và tên người nhận *</label>

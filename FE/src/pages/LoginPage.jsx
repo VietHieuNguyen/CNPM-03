@@ -74,7 +74,10 @@ const LoginPage = () => {
           </div>
 
           <div className="input-group">
-            <label htmlFor="login-password">Mật khẩu</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label htmlFor="login-password">Mật khẩu</label>
+              <Link to="/forgot-password" style={{ fontSize: "0.75rem", color: "var(--color-accent)", fontWeight: "600" }}>Quên mật khẩu?</Link>
+            </div>
             <div className="input-icon-wrapper">
               <Lock size={16} className="input-icon" />
               <input

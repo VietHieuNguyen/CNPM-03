@@ -28,6 +28,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    bio: {
+      type: String,
+      default: "",
+    },
+    addresses: [
+      {
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+        address: { type: String, required: true },
+        city: { type: String, required: true },
+        isDefault: { type: Boolean, default: false },
+      }
+    ],
     refreshToken: {
       type: String,
       default: null,
@@ -36,6 +49,14 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    otp: {
+      type: String,
+      default: null,
+    },
+    otpExpires: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }
