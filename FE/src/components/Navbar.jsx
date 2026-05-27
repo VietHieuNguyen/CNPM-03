@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, User, LogOut, Search, Menu, X, BookOpen, Compass } from "lucide-react";
+import { ShoppingCart, User, LogOut, Search, Menu, X, BookOpen, Compass, ClipboardList, MapPin } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 
@@ -105,9 +105,20 @@ const Navbar = () => {
                       <p className="user-email">{user.email}</p>
                     </div>
                     <hr className="dropdown-divider" />
-                    <Link to="/profile" className="dropdown-item" onClick={() => setShowProfileMenu(false)}>
-                      <BookOpen size={16} /> Đơn hàng của tôi
-                    </Link>
+                    {user.role === "admin" && (
+                      <Link to="/admin" className="dropdown-item text-accent" style={{ fontWeight: "600", color: "var(--color-accent)" }} onClick={() => setShowProfileMenu(false)}>
+                        <Compass size={16} /> Trang quản trị
+                      </Link>
+                    )}
+                     <Link to="/profile?tab=edit-profile" className="dropdown-item" onClick={() => setShowProfileMenu(false)}>
+                       <User size={16} /> Thông tin cá nhân
+                     </Link>
+                     <Link to="/profile?tab=orders" className="dropdown-item" onClick={() => setShowProfileMenu(false)}>
+                       <ClipboardList size={16} /> Đơn hàng của tôi
+                     </Link>
+                     <Link to="/profile?tab=addresses" className="dropdown-item" onClick={() => setShowProfileMenu(false)}>
+                       <MapPin size={16} /> Sổ địa chỉ
+                     </Link>
                     <button className="dropdown-item logout-btn" onClick={() => { setShowProfileMenu(false); handleLogout(); }}>
                       <LogOut size={16} /> Đăng xuất
                     </button>
@@ -131,10 +142,15 @@ const Navbar = () => {
             <Link to="/collection?sort=newest" onClick={() => setMobileMenuOpen(false)}>Mới về</Link>
             <Link to="/collection?sort=bestseller" onClick={() => setMobileMenuOpen(false)}>Tác giả</Link>
             <Link to="/collection?category=manga" onClick={() => setMobileMenuOpen(false)}>Góc đọc</Link>
-            {user ? (
+             {user ? (
               <>
                 <hr style={{ borderColor: "var(--border-color)", margin: "16px 0" }} />
-                <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>Đơn hàng của tôi</Link>
+                {user.role === "admin" && (
+                  <Link to="/admin" style={{ color: "var(--color-accent)", fontWeight: "600" }} onClick={() => setMobileMenuOpen(false)}>Trang quản trị</Link>
+                )}
+                <Link to="/profile?tab=edit-profile" onClick={() => setMobileMenuOpen(false)}>Thông tin cá nhân</Link>
+                <Link to="/profile?tab=orders" onClick={() => setMobileMenuOpen(false)}>Đơn hàng của tôi</Link>
+                <Link to="/profile?tab=addresses" onClick={() => setMobileMenuOpen(false)}>Sổ địa chỉ</Link>
                 <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="mobile-logout-btn">
                   Đăng xuất ({user.name})
                 </button>

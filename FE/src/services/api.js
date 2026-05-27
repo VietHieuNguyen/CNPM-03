@@ -5,9 +5,6 @@ const API_BASE_URL = "http://localhost:3000/api/v1";
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Crucial for cookie-based authentication
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Response interceptor to handle token expiry / auto-refresh in the future if needed
@@ -49,19 +46,11 @@ export const authAPI = {
     return response.data;
   },
   updateProfile: async (formData) => {
-    const response = await apiClient.patch("/user/profile", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await apiClient.patch("/user/profile", formData);
     return response.data;
   },
   uploadImage: async (formData) => {
-    const response = await apiClient.post("/user/upload-image", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await apiClient.post("/user/upload-image", formData);
     return response.data;
   },
   forgotPassword: async (email) => {
@@ -179,6 +168,29 @@ export const orderAPI = {
 export const paymentAPI = {
   getConfig: async () => {
     const response = await apiClient.get("/payment/config");
+    return response.data;
+  },
+};
+
+export const adminAPI = {
+  getComics: async (params) => {
+    const response = await apiClient.get("/admin/comics", { params });
+    return response.data;
+  },
+  createComic: async (formData) => {
+    const response = await apiClient.post("/admin/comics", formData);
+    return response.data;
+  },
+  updateComic: async (id, formData) => {
+    const response = await apiClient.put(`/admin/comics/${id}`, formData);
+    return response.data;
+  },
+  deleteComic: async (id) => {
+    const response = await apiClient.delete(`/admin/comics/${id}`);
+    return response.data;
+  },
+  getCategories: async () => {
+    const response = await apiClient.get("/admin/categories");
     return response.data;
   },
 };

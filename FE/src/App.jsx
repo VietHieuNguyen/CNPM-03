@@ -17,6 +17,9 @@ import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
 
 function App() {
   return (
@@ -38,6 +41,9 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/order/:id" element={<OrderDetailPage />} />
+                <Route path="/admin" element={<AdminDashboardPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
                 
                 {/* Catch-all redirects to Home */}
                 <Route path="*" element={<Navigate to="/" />} />

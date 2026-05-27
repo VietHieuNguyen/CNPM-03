@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { orderAPI, authAPI } from "../services/api";
 import { formatPrice } from "../components/ComicCard";
@@ -23,11 +23,14 @@ import {
 
 const ProfilePage = () => {
   const { user, logout, setUser } = useAuth();
+  const navigate = useNavigate();
   const location = newLocation => {}; // mock/unused, using React Router location
   const routerLocation = useLocation();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
   
   // Navigation tab state: "orders", "edit-profile", "addresses"
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState(tabParam || "orders");
   
   // Orders history state
   const [orders, setOrders] = useState([]);
@@ -41,6 +44,7 @@ const ProfilePage = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
   const [profileSubmitting, setProfileSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Address book state
   const [addresses, setAddresses] = useState([]);
@@ -102,6 +106,12 @@ const ProfilePage = () => {
   }, [user]);
 
   useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  useEffect(() => {
     if (newOrderSuccess) {
       setToastMessage({ type: "success", text: "Đơn hàng của bạn đã được đặt thành công!" });
       setTimeout(() => setToastMessage(null), 5000);
@@ -128,7 +138,7 @@ const ProfilePage = () => {
       const res = await authAPI.updateProfile(formData);
       if (res.success) {
         setUser(res.data.user);
-        setToastMessage({ type: "success", text: "Cập nhật thông tin cá nhân thành công!" });
+        setShowSuccessModal(true);
       } else {
         setToastMessage({ type: "error", text: res.message || "Cập nhật hồ sơ thất bại." });
       }
@@ -306,19 +316,11 @@ const ProfilePage = () => {
   };
 
   const isDirectCancellable = (order) => {
-    if (order.status === "cancelled" || order.status === "delivered" || order.status === "shipping") {
-      return false;
-    }
-    const elapsedMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
-    return elapsedMinutes < 30 && (order.status === "pending" || order.status === "confirmed");
+    return order?.isDirectCancellable === true;
   };
 
   const isCancelRequestable = (order) => {
-    if (order.status === "cancelled" || order.status === "delivered" || order.status === "shipping" || order.cancelRequest) {
-      return false;
-    }
-    const elapsedMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
-    return order.status === "preparing" || elapsedMinutes >= 30;
+    return order?.isCancelRequestable === true;
   };
 
   return (
@@ -345,7 +347,7 @@ const ProfilePage = () => {
             
             <h3 className="user-profile-name">{user.name}</h3>
             <p className="user-profile-email">{user.email}</p>
-            <p className="user-profile-role">Khách hàng thành viên</p>
+            <p className="user-profile-role" style={{ marginBottom: "0" }}>Khách hàng thành viên</p>
 
             <nav className="profile-navigation-tabs">
               <button
@@ -450,7 +452,7 @@ const ProfilePage = () => {
                             <div className="action-buttons-row">
                               <button
                                 className="btn-secondary view-detail-order-btn"
-                                onClick={() => setSelectedOrder(order)}
+                                onClick={() => navigate(`/order/${order._id}`)}
                               >
                                 Theo dõi đơn hàng
                               </button>
@@ -753,136 +755,21 @@ const ProfilePage = () => {
         </main>
       </div>
 
-      {/* Visual Tracking Modal */}
-      {selectedOrder && (
-        <div className="tracking-modal-overlay animate-fade-in">
-          <div className="tracking-modal-container">
-            <div className="tracking-modal-header">
-              <button className="back-btn" onClick={() => setSelectedOrder(null)}>
-                <ArrowLeft size={16} /> Quay lại
-              </button>
-              <h3>Đơn hàng KOM-{selectedOrder._id.slice(-6).toUpperCase()}</h3>
-              <button className="close-btn" onClick={() => setSelectedOrder(null)}>×</button>
+      {/* Visual Tracking Modal replaced by OrderDetailPage.jsx */}
+
+      {showSuccessModal && (
+        <div className="profile-modal-backdrop animate-fade-in" onClick={() => setShowSuccessModal(false)}>
+          <div className="profile-modal-card animate-scale-up" onClick={(e) => e.stopPropagation()}>
+            <div className="profile-modal-icon-wrapper">
+              <CheckCircle2 size={48} className="profile-modal-icon" />
             </div>
-
-            <div className="tracking-modal-body">
-              <div className="tracking-stepper">
-                {selectedOrder.status === "cancelled" ? (
-                  <div className="stepper-cancelled animate-fade-in">
-                    <XCircle size={40} color="#A34E36" />
-                    <h4>Đơn hàng đã bị hủy</h4>
-                    <p>Số lượng tồn kho đã được hoàn trả lại cho cửa hàng.</p>
-                  </div>
-                ) : (
-                  <div className="stepper-steps">
-                    <div className={`step-item ${["pending", "confirmed", "preparing", "shipping", "delivered"].includes(selectedOrder.status) ? "active" : ""}`}>
-                      <div className="step-number">{["confirmed", "preparing", "shipping", "delivered"].includes(selectedOrder.status) ? "✓" : "1"}</div>
-                      <span className="step-label">Chờ xác nhận</span>
-                    </div>
-
-                    <div className={`step-connector ${["confirmed", "preparing", "shipping", "delivered"].includes(selectedOrder.status) ? "active" : ""}`}></div>
-
-                    <div className={`step-item ${["confirmed", "preparing", "shipping", "delivered"].includes(selectedOrder.status) ? "active" : ""}`}>
-                      <div className="step-number">{["shipping", "delivered"].includes(selectedOrder.status) ? "✓" : "2"}</div>
-                      <span className="step-label">Đang đóng gói</span>
-                    </div>
-
-                    <div className={`step-connector ${["shipping", "delivered"].includes(selectedOrder.status) ? "active" : ""}`}></div>
-
-                    <div className={`step-item ${["shipping", "delivered"].includes(selectedOrder.status) ? "active" : ""}`}>
-                      <div className="step-number">{["delivered"].includes(selectedOrder.status) ? "✓" : "3"}</div>
-                      <span className="step-label">Đang giao hàng</span>
-                    </div>
-
-                    <div className={`step-connector ${["delivered"].includes(selectedOrder.status) ? "active" : ""}`}></div>
-
-                    <div className={`step-item ${selectedOrder.status === "delivered" ? "active" : ""}`}>
-                      <div className="step-number">4</div>
-                      <span className="step-label">Đã giao hàng</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="tracking-details-grid">
-                <div className="details-card">
-                  <h4 className="card-sec-title"><MapPin size={14} /> Địa chỉ nhận hàng</h4>
-                  <div className="card-body-text">
-                    <p className="recipient-name">{selectedOrder.shippingAddress.name}</p>
-                    <p className="recipient-phone">SĐT: {selectedOrder.shippingAddress.phone}</p>
-                    <p className="recipient-address">
-                      {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}
-                    </p>
-                    {selectedOrder.note && (
-                      <p className="recipient-notes">Ghi chú: "{selectedOrder.note}"</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="details-card">
-                  <h4 className="card-sec-title"><ClipboardList size={14} /> Sản phẩm mua</h4>
-                  <div className="tracking-items-list">
-                    {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="tracking-item-row">
-                        <img src={item.image} alt={item.title} />
-                        <div className="item-details">
-                          <p className="item-title">{item.title}</p>
-                          <p className="item-qty-price">{item.quantity} x {formatPrice(item.price)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="tracking-summary-pricing">
-                    <div className="price-row">
-                      <span>Tạm tính</span>
-                      <span>{formatPrice(selectedOrder.totalAmount)}</span>
-                    </div>
-                    <div className="price-row">
-                      <span>Phí giao hàng</span>
-                      <span className="free">Miễn phí</span>
-                    </div>
-                    <hr className="divider" />
-                    <div className="price-row grand-total">
-                      <span>Tổng tiền</span>
-                      <span>{formatPrice(selectedOrder.totalAmount)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="tracking-modal-footer">
-              {isDirectCancellable(selectedOrder) && (
-                <button
-                  className="btn-primary cancel-btn"
-                  onClick={() => handleCancelOrder(selectedOrder._id)}
-                  disabled={cancelLoading}
-                >
-                  Hủy đơn hàng ngay
-                </button>
-              )}
-
-              {isCancelRequestable(selectedOrder) && (
-                <button
-                  className="btn-primary cancel-request-btn"
-                  onClick={() => handleCancelOrder(selectedOrder._id)}
-                  disabled={cancelLoading}
-                >
-                  Gửi yêu cầu hủy đơn hàng
-                </button>
-              )}
-
-              {selectedOrder.cancelRequest && (
-                <div className="pending-cancel-badge">
-                  <AlertTriangle size={14} /> Đã gửi yêu cầu hủy cho shop xét duyệt.
-                </div>
-              )}
-
-              <button className="btn-secondary" onClick={() => setSelectedOrder(null)}>
-                Đóng
-              </button>
-            </div>
+            <h3 className="profile-modal-title">Cập nhật thành công!</h3>
+            <p className="profile-modal-message">
+              Thông tin cá nhân và hồ sơ của bạn đã được cập nhật thành công trên hệ thống.
+            </p>
+            <button className="btn-primary profile-modal-btn" onClick={() => setShowSuccessModal(false)}>
+              Đồng ý
+            </button>
           </div>
         </div>
       )}
@@ -890,6 +777,86 @@ const ProfilePage = () => {
       <style dangerouslySetInnerHTML={{__html: `
         .profile-page-wrapper {
           padding-top: 48px;
+        }
+
+        /* Profile Success Modal Styles */
+        .profile-modal-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(42, 36, 33, 0.4);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .profile-modal-card {
+          background-color: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          width: 90%;
+          max-width: 420px;
+          padding: 40px 32px;
+          text-align: center;
+          box-shadow: var(--shadow-lg);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .profile-modal-icon-wrapper {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          background-color: #EBF7EE;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 24px;
+        }
+
+        .profile-modal-icon {
+          color: #438258;
+        }
+
+        .profile-modal-title {
+          font-family: var(--font-serif);
+          font-size: 1.6rem;
+          font-weight: 600;
+          color: var(--color-text-main);
+          margin-bottom: 12px;
+        }
+
+        .profile-modal-message {
+          font-size: 0.95rem;
+          color: var(--color-text-muted);
+          line-height: 1.6;
+          margin-bottom: 32px;
+        }
+
+        .profile-modal-btn {
+          width: 100%;
+          padding: 12px;
+          font-size: 0.95rem;
+          font-weight: 600;
+        }
+        
+        .animate-scale-up {
+          animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes scaleUp {
+          from {
+            transform: scale(0.9);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
         }
         
         .profile-auth-prompt {
@@ -964,6 +931,31 @@ const ProfilePage = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+        .user-profile-bio-preview {
+          text-align: left !important;
+          max-width: 100%;
+          overflow-x: hidden;
+          overflow-wrap: break-word;
+          word-wrap: break-word;
+          word-break: break-word;
+        }
+        .user-profile-bio-preview img {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block;
+          margin: 12px auto;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .user-profile-bio-preview iframe,
+        .user-profile-bio-preview video {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        .user-profile-bio-preview p {
+          margin-bottom: 8px;
+          line-height: 1.6;
         }
         .avatar-letter {
           font-size: 2.2rem;

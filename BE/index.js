@@ -30,6 +30,16 @@ app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Manga Store API is running!", version: "v1" })
 })
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("=== GLOBAL ERROR ===");
+  console.error(err);
+  return res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Lỗi tải file hoặc hệ thống xảy ra.",
+  });
+});
+
 // 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route không tồn tại." })

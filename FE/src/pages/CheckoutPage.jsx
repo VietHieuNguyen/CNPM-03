@@ -92,9 +92,9 @@ const CheckoutPage = () => {
               await clearCart();
               await fetchCart();
               
-              // Auto-redirect to profile after 3 seconds
+              // Auto-redirect to order details after 3 seconds
               setTimeout(() => {
-                navigate("/profile", { state: { newOrderSuccess: true } });
+                navigate(`/order/${placedOrder._id}`, { state: { newOrderSuccess: true } });
               }, 3000);
             }
           }
@@ -142,8 +142,8 @@ const CheckoutPage = () => {
           // Keep screen here and open SePay VietQR Modal
           setPlacedOrder(res.data);
         } else {
-          // COD: Redirect directly to profile to track
-          navigate("/profile", { state: { newOrderSuccess: true } });
+          // COD: Redirect directly to order details to track
+          navigate(`/order/${res.data._id}`, { state: { newOrderSuccess: true } });
         }
       } else {
         setErrorMessage(res.message || "Đặt hàng thất bại. Vui lòng thử lại.");

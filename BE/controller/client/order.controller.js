@@ -116,7 +116,20 @@ exports.getOrders = async (req, res) => {
     const processedOrders = []
     for (const order of orders) {
       const processed = await checkAutoConfirm(order)
-      processedOrders.push(processed)
+      const elapsedMinutes = (Date.now() - new Date(processed.createdAt).getTime()) / (1000 * 60)
+      const isLessThan30Min = elapsedMinutes < 30
+      
+      const orderObj = processed.toObject()
+      
+      orderObj.isDirectCancellable = !["cancelled", "delivered", "shipping"].includes(processed.status) && 
+                                     isLessThan30Min && 
+                                     ["pending", "confirmed"].includes(processed.status)
+      
+      orderObj.isCancelRequestable = !["cancelled", "delivered", "shipping"].includes(processed.status) && 
+                                     processed.cancelRequest === false &&
+                                     (processed.status === "preparing" || !isLessThan30Min)
+                                     
+      processedOrders.push(orderObj)
     }
 
     res.status(200).json({
@@ -145,9 +158,22 @@ exports.getOrderById = async (req, res) => {
 
     order = await checkAutoConfirm(order)
 
+    const elapsedMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60)
+    const isLessThan30Min = elapsedMinutes < 30
+    
+    const orderObj = order.toObject()
+    
+    orderObj.isDirectCancellable = !["cancelled", "delivered", "shipping"].includes(order.status) && 
+                                   isLessThan30Min && 
+                                   ["pending", "confirmed"].includes(order.status)
+    
+    orderObj.isCancelRequestable = !["cancelled", "delivered", "shipping"].includes(order.status) && 
+                                   order.cancelRequest === false &&
+                                   (order.status === "preparing" || !isLessThan30Min)
+
     res.status(200).json({
       success: true,
-      data: order,
+      data: orderObj,
     })
   } catch (error) {
     res.status(500).json({
@@ -199,10 +225,14 @@ exports.cancelOrder = async (req, res) => {
       order.cancelRequest = true
       await order.save()
 
+      const orderObj = order.toObject()
+      orderObj.isDirectCancellable = false
+      orderObj.isCancelRequestable = false
+
       return res.status(200).json({
         success: true,
         message: "Đã gửi yêu cầu hủy đơn hàng cho shop xét duyệt.",
-        data: order,
+        data: orderObj,
       })
     }
 
@@ -220,10 +250,14 @@ exports.cancelOrder = async (req, res) => {
       }
     }
 
+    const orderObj = order.toObject()
+    orderObj.isDirectCancellable = false
+    orderObj.isCancelRequestable = false
+
     res.status(200).json({
       success: true,
       message: "Hủy đơn hàng thành công!",
-      data: order,
+      data: orderObj,
     })
   } catch (error) {
     res.status(500).json({

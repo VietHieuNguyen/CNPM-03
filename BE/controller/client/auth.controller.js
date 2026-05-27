@@ -158,13 +158,18 @@ module.exports.index = (req, res) => {
 // PATCH /api/v1/user/profile
 module.exports.updateProfile = async (req, res) => {
   try {
+    console.log("=== UPDATE PROFILE DEBUG ===");
+    console.log("req.body:", req.body);
+    console.log("req.file:", req.file);
+
     const { name, bio } = req.body
     const updateData = {}
 
     if (name) updateData.name = name
     if (typeof bio === "string") updateData.bio = bio
-    if (req.file && req.file.path) {
-      updateData.avatar = req.file.path
+    if (req.file) {
+      updateData.avatar = req.file.path || req.file.secure_url || req.file.url
+      console.log("Setting avatar path to:", updateData.avatar);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -197,12 +202,13 @@ module.exports.updateProfile = async (req, res) => {
 // POST /api/v1/user/upload-image
 module.exports.uploadImage = async (req, res) => {
   try {
-    if (!req.file || !req.file.path) {
+    const imagePath = req.file ? (req.file.path || req.file.secure_url || req.file.url) : null;
+    if (!imagePath) {
       return res.status(400).json({ success: false, message: "Không tìm thấy file để upload." })
     }
     // Return standard format required by TinyMCE
     return res.status(200).json({
-      location: req.file.path
+      location: imagePath
     })
   } catch (error) {
     console.error("Upload image error:", error)
